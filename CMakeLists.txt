@@ -45,11 +45,14 @@ target_compile_options(${digitalcamera}
 set(ldir ${CMAKE_CURRENT_SOURCE_DIR}/sony/libs)
 set(cr_ldir ${ldir}/crsdk)
 
+set(obsbot_dir ${CMAKE_CURRENT_SOURCE_DIR}/obsbot)
+
 target_include_directories(${digitalcamera}
     PRIVATE
         ${crsdk_hdr_dir} # defined in enum script
         ${__cli_hdr_dir}
         ${ldir}/opencv/include
+        ${obsbot_dir}/include
 )
 
 ### Link CRSDK library
@@ -74,12 +77,17 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     endif()
 endif()
 
+target_link_directories(${digitalcamera} PRIVATE "${obsbot_dir}/libs")
+target_link_libraries(${digitalcamera} PRIVATE dev)
+
 target_link_libraries(${digitalcamera} PRIVATE 
     ${ldir}/opencv/Linux/libopencv_core.so.408
     ${ldir}/opencv/Linux/libopencv_highgui.so.408
     ${ldir}/opencv/Linux/libopencv_imgcodecs.so.408
     ${ldir}/opencv/Linux/libopencv_imgproc.so.408
 )
+
+ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations -Wno-switch")
 
 ## Copy required library binaries
 add_custom_command(TARGET ${digitalcamera} PRE_BUILD

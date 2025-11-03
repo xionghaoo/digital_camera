@@ -16,13 +16,25 @@ namespace fs = std::filesystem;
 #include "CameraDevice.h"
 #include "Text.h"
 
+#include <iostream>
+#include <vector>
+#include <thread>
+#include <codecvt>
+#include <algorithm>
+#include <cstring>
+#include <dev/devs.hpp>
+
+using namespace std;
+
+#include <dev/devs.hpp>
+
 //#define LIVEVIEW_ENB
 
 #define MSEARCH_ENB
 
 namespace SDK = SCRSDK;
 
-int main()
+int atest_main()
 {
     // Change global locale to native locale
     std::locale::global(std::locale(""));
@@ -1320,4 +1332,10 @@ int main()
 
     cli::tout << "Exiting application.\n";
     std::exit(EXIT_SUCCESS);
+    return 0;
+}
+
+int main() {
+    /// enable mdns scan for detect device by network
+    Devices::get().setEnableMdnsScan(false);
 }
