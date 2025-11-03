@@ -23,10 +23,9 @@ namespace fs = std::filesystem;
 #include <algorithm>
 #include <cstring>
 #include <dev/devs.hpp>
+#include <drogon/drogon.h>
 
 using namespace std;
-
-#include <dev/devs.hpp>
 
 //#define LIVEVIEW_ENB
 
@@ -34,7 +33,7 @@ using namespace std;
 
 namespace SDK = SCRSDK;
 
-int atest_main()
+int tt_main()
 {
     // Change global locale to native locale
     std::locale::global(std::locale(""));
@@ -1336,6 +1335,13 @@ int atest_main()
 }
 
 int main() {
-    /// enable mdns scan for detect device by network
-    Devices::get().setEnableMdnsScan(false);
+     drogon::app()
+        .registerHandler("/", [](const drogon::HttpRequestPtr&,
+                                 std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
+            auto resp = drogon::HttpResponse::newHttpResponse();
+            resp->setBody("Hello, Drogon");
+            cb(resp);
+        })
+        .addListener("0.0.0.0", 8080)
+        .run();
 }

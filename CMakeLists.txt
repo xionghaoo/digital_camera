@@ -1,11 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(digital_camera)
 
-# 设置C++标准为C++17
-# set(CMAKE_CXX_STANDARD 17)
-# set(CMAKE_CXX_STANDARD_REQUIRED ON)
-# set(CMAKE_CXX_EXTENSIONS OFF)
-
 ### Append project cmake script dir ###
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -14,9 +9,6 @@ include(enum_cli_hdr)
 include(enum_cli_src)
 include(enum_crsdk_hdr)
 
-
-# 添加可执行文件
-# add_executable(${PROJECT_NAME} src/main.cpp)
 ### Define output target ###
 set(digitalcamera "${PROJECT_NAME}")
 add_executable(${digitalcamera}
@@ -87,7 +79,11 @@ target_link_libraries(${digitalcamera} PRIVATE
     ${ldir}/opencv/Linux/libopencv_imgproc.so.408
 )
 
- set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations -Wno-switch")
+
+add_subdirectory(third_party/drogon)
+target_link_libraries(${PROJECT_NAME} PRIVATE drogon)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations -Wno-switch")
 
 ## Copy required library binaries
 add_custom_command(TARGET ${digitalcamera} PRE_BUILD
