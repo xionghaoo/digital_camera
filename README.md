@@ -2,6 +2,12 @@
 
 ## 项目编译
 
+第三方模块拉取
+```shell
+git submodule init
+git submodule update
+```
+
 ```shell
 mkdir build
 cd build
