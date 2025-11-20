@@ -1,15 +1,3 @@
-#include <cstdlib>
-#if defined(USE_EXPERIMENTAL_FS)
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#else
-#include <filesystem>
-namespace fs = std::filesystem;
-#if defined(__APPLE__)
-#include <unistd.h>
-#endif
-#endif
-
 #include <string>
 #include <cstdint>
 #include <iomanip>
@@ -28,7 +16,7 @@ using namespace std;
 
 SonyCamera camera;
 
-int t_main() {
+int main() {
     // Change global locale to native locale
     std::locale::global(std::locale(""));
 
@@ -52,9 +40,10 @@ int t_main() {
         })
         .registerHandler("/device/scan", [](const drogon::HttpRequestPtr&,
                     std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
+            std::string devList = camera.scan();
             auto resp = drogon::HttpResponse::newHttpResponse();
-            std::string version = camera.version();
-            resp->setBody(version.c_str());
+            resp->setContentTypeString("application/json; charset=utf-8");
+            resp->setBody(devList);
             cb(resp);
         })
         .addListener("0.0.0.0", 8080)

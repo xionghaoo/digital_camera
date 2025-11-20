@@ -22,7 +22,7 @@ namespace fs = std::filesystem;
 //#define M_ETHERNET_ENB
 namespace SDK = SCRSDK;
 
-int main()
+int remotecli_main()
 {
     // Change global locale to native locale
     std::locale::global(std::locale(""));

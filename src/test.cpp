@@ -29,7 +29,7 @@ using namespace std;
 
 //#define LIVEVIEW_ENB
 
-//#define MSEARCH_ENB
+#define MSEARCH_ENB
 
 namespace SDK = SCRSDK;
 
