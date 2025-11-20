@@ -15,7 +15,9 @@ add_executable(${digitalcamera}
     ${cli_hdrs}
     ${cli_srcs}
     ${crsdk_hdrs}
+    src/SonyCamera.cpp
     src/main.cpp
+    src/test.cpp
 )
 
 set_target_properties(${digitalcamera} PROPERTIES
@@ -39,12 +41,15 @@ set(cr_ldir ${ldir}/crsdk)
 
 set(obsbot_dir ${CMAKE_CURRENT_SOURCE_DIR}/obsbot)
 
+set(third_dir ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+
 target_include_directories(${digitalcamera}
     PRIVATE
         ${crsdk_hdr_dir} # defined in enum script
         ${__cli_hdr_dir}
         ${ldir}/opencv/include
         ${obsbot_dir}/include
+        ${third_dir}/nlohmann
 )
 
 ### Link CRSDK library

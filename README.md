@@ -20,3 +20,7 @@ drogon依赖安装
 sudo apt update
 sudo apt install -y git cmake g++ build-essential pkg-config libssl-dev zlib1g-dev uuid-dev libjsoncpp-dev
 ```
+
+```shell
+sudo sh -c 'echo 150 > /sys/module/usbcore/parameters/usbfs_memory_mb'
+```

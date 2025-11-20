@@ -1,4 +1,4 @@
-﻿#include <cstdlib>
+#include <cstdlib>
 #if defined(USE_EXPERIMENTAL_FS)
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
@@ -16,13 +16,24 @@ namespace fs = std::filesystem;
 #include "CameraDevice.h"
 #include "Text.h"
 
+#include <iostream>
+#include <vector>
+#include <thread>
+#include <codecvt>
+#include <algorithm>
+#include <cstring>
+#include <dev/devs.hpp>
+#include <drogon/drogon.h>
+
+using namespace std;
+
 //#define LIVEVIEW_ENB
 
-#define MSEARCH_ENB
-//#define M_ETHERNET_ENB
+//#define MSEARCH_ENB
+
 namespace SDK = SCRSDK;
 
-int main()
+int a_main()
 {
     // Change global locale to native locale
     std::locale::global(std::locale(""));
@@ -158,7 +169,7 @@ int main()
 #else
     strncpy((char*)serialNum, "D18D5074C0AE", serialSiz);// dummy data
 #endif
-    CrInt32 ipAddr = 0xC0A80B0B; // 192.168.11.11
+    CrInt32 ipAddr = 0xC0A80B0B; // 192.168.0.10
     CrInt8u macAddr[6] = { 0x34, 0x90, 0xEA, 0xE9, 0x82, 0x61 }; // dummy data
     SDK::CrCameraDeviceModelList usbModel = SDK::CrCameraDeviceModelList::CrCameraDeviceModel_ILCE_9M2;
     SDK::CrCameraDeviceModelList ethernetModel = SDK::CrCameraDeviceModelList::CrCameraDeviceModel_ILME_FX6;
@@ -171,7 +182,7 @@ int main()
     std::int32_t cameraNumUniq = 1;
     std::int32_t selectCamera = 1;
     CameraDevicePtr camera;
-#ifdef M_USB_ENB
+#if 0
     // USB
     pCam = nullptr;
     err = SDK::CreateCameraObjectInfoUSBConnection(&pCam, usbModel, (unsigned char*)serialNum);
@@ -182,7 +193,6 @@ int main()
         cameraNumUniq++;
     }
 #endif
-#ifdef M_ETHERNET_ENB
     // Ether
     pCam = nullptr;
     CrInt32u inputSshSupport = 0; // OFF
@@ -276,7 +286,7 @@ int main()
     }
     selectCamera = no;
     camera = cameraList[no - 1];
-#endif
+
 #endif
     // loop-A
     for (;;) {
@@ -1321,4 +1331,5 @@ int main()
 
     cli::tout << "Exiting application.\n";
     std::exit(EXIT_SUCCESS);
+    return 0;
 }
