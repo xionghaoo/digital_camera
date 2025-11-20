@@ -66,7 +66,6 @@ std::string SonyCamera::scan() {
     
     json ret = json::array();
     cli::tout << "Enumerate connected camera devices...\n";
-    SDK::ICrEnumCameraObjectInfo* camera_list = nullptr;
     auto enum_status = SDK::EnumCameraObjects(&camera_list);
     if (CR_FAILED(enum_status) || camera_list == nullptr) {
         cli::tout << "No cameras detected. Connect a camera and retry.\n";
@@ -96,4 +95,40 @@ std::string SonyCamera::scan() {
         ret.push_back(dev);
     }
     return ret.dump();
+}
+
+bool SonyCamera::connect(int index) {
+    if (camera_list == nullptr) {
+        return false;
+    }
+    
+    std::int32_t cameraNumUniq = 1;
+    std::int32_t selectCamera = 1;
+
+    cli::tout << "Connect to selected camera...\n";
+    auto* camera_info = camera_list->GetCameraObjectInfo(index - 1);
+
+    cli::tout << "Create camera SDK camera callback object.\n";
+    camera = CameraDevicePtr(new cli::CameraDevice(cameraNumUniq, camera_info));
+    cameraList.push_back(camera); // add 1st
+    camera_list->Release();
+
+    if (camera->is_connected()) {
+        cli::tout << "Please disconnect\n";
+        return false;
+    } else {
+        camera->connect(SDK::CrSdkControlMode_Remote, SDK::CrReconnecting_ON);
+    }
+    return true;
+}
+
+bool SonyCamera::af_shutter() {
+    if (camera == nullptr) {
+        cli::tout << "camera not create\n";
+        return false;
+    }
+    // Shutter Half and Full Release in AF mode
+    cli::tout << "Shutter Half and Full Release in AF mode\n";
+    camera->af_shutter();
+    return true;
 }

@@ -321,13 +321,13 @@ void CameraDevice::s1_shooting() const
 
 void CameraDevice::af_shutter() const
 {
-    text input;
-    tout << "Is the focus mode set to AF? (y/n): ";
-    std::getline(tin, input);
-    if (input != TEXT("y")) {
-        tout << "Set the focus mode to AF\n";
-        return;
-    }
+    // text input;
+    // tout << "Is the focus mode set to AF? (y/n): ";
+    // std::getline(tin, input);
+    // if (input != TEXT("y")) {
+    //     tout << "Set the focus mode to AF\n";
+    //     return;
+    // }
 
     tout << "S1 shooting...\n";
     tout << "Shutter Half Press down\n";

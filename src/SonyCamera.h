@@ -27,14 +27,18 @@ typedef std::vector<CameraDevicePtr> CameraDeviceList;
 
 class SonyCamera {
     private:
-        CameraDeviceList cameraList;
         int initialize();
         int release();
     protected:
+        CameraDeviceList cameraList;
+        CameraDevicePtr camera;
         bool isInitialized = false;
     public:
+        SDK::ICrEnumCameraObjectInfo* camera_list = nullptr;
         SonyCamera();
         ~SonyCamera();
         std::string version();
         std::string scan();
+        bool connect(int index);
+        bool af_shutter();
 };
