@@ -89,6 +89,33 @@ int main() {
             resp->setBody(data.dump());
             cb(resp);
         })
+        .registerHandler("/live-view/enable", [](const drogon::HttpRequestPtr& req,
+                    std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
+            bool isEnable = false;
+            if (req->getContentType() == drogon::CT_APPLICATION_JSON) {
+                auto jsonPtr = req->getJsonObject();
+                isEnable = jsonPtr->get("is_enable", false).asBool();
+            }
+            auto resp = drogon::HttpResponse::newHttpResponse();
+            resp->setContentTypeString("application/json; charset=utf-8");
+            json data;
+            camera.enable_live_view(isEnable);
+            data["code"] = 0;
+            data["data"] = nullptr;
+            resp->setBody(data.dump());
+            cb(resp);
+        })
+        .registerHandler("/live-view", [](const drogon::HttpRequestPtr& req,
+                    std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
+            auto resp = drogon::HttpResponse::newHttpResponse();
+            resp->setContentTypeString("application/json; charset=utf-8");
+            json data;
+            camera.live_view();
+            data["code"] = 0;
+            data["data"] = nullptr;
+            resp->setBody(data.dump());
+            cb(resp);
+        })
         .registerHandler("/power", [](const drogon::HttpRequestPtr& req,
                     std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
             bool powerOn = false;

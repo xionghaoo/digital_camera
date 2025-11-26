@@ -60,6 +60,7 @@ public:
     ~CameraDevice();
 
     void setCompeletedCallback(std::function<void (std::string)>* cb);
+    void enable_live_view(bool enable);
 
     // Get fingerprint
     bool getfingerprint();

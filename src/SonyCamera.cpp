@@ -166,3 +166,24 @@ void SonyCamera::power_on() {
     }
     camera->power_on();
 }
+
+void SonyCamera::live_view() {
+    if (camera == nullptr) {
+        cli::tout << "camera not create\n";
+        return;
+    }
+    while (isLiveRunning) {
+        camera->change_live_view_enable();     
+        camera->get_live_view_only();        
+    }
+    std::cout << "live view exited" << std::endl;
+}
+
+void SonyCamera::enable_live_view(bool enable) {
+     if (camera == nullptr) {
+        cli::tout << "camera not create\n";
+        return;
+    }
+    isLiveRunning = enable;
+    camera->enable_live_view(enable);
+}

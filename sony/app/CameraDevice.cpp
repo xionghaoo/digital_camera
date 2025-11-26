@@ -45,6 +45,7 @@ namespace fs = std::filesystem;
 #else
 #include <conio.h>
 #endif
+#include "FFmpegStreamer.h"
 
 
 // Enumerator
@@ -81,6 +82,8 @@ namespace SDK = SCRSDK;
 using namespace std::chrono_literals;
 
 constexpr int const ImageSaveAutoStartNo = -1;
+
+FFmpegStreamer streamer;
 
 namespace cli
 {
@@ -131,10 +134,23 @@ CameraDevice::~CameraDevice()
 {
     if (m_modelNameProp)delete m_modelNameProp;
     if (m_info) m_info->Release();
+    streamer.stop();
 }
 
 void CameraDevice::setCompeletedCallback(std::function<void (std::string)>* cb) {
     this->onCaptureCompleted = cb;
+}
+
+void CameraDevice::enable_live_view(bool enable) {
+    if (enable) {
+        if (!streamer.startHlsStream("/var/www/html/hls", 25)) {
+            tout << "启动推流失败\n";
+            return;
+        }
+        tout << "启动推流成功\n";   
+    } else {
+        streamer.stop();
+    }
 }
 
 bool CameraDevice::getfingerprint()
@@ -582,16 +598,18 @@ void CameraDevice::get_live_view_only()
     strncat(path, filename, strlen(filename));
 #else
     auto path = fs::current_path();
-    path.append(TEXT("LiveView000000.JPG"));
+    std::string pic_name("Live" + std::to_string(image_data->GetFrameNo()) + ".JPG");
+    path.append(TEXT(pic_name));
 #endif
     tout << path << '\n';
 
-    std::ofstream file(path, std::ios::out | std::ios::binary);
-    if (!file.bad())
-    {
-        file.write((char*)image_data->GetImageData(), image_data->GetImageSize());
-        file.close();
-    }
+    // std::ofstream file(path, std::ios::out | std::ios::binary);
+    // if (!file.bad())
+    // {
+    //     file.write((char*)image_data->GetImageData(), image_data->GetImageSize());
+    //     file.close();
+    // }
+    streamer.pushFrame((char*)image_data->GetImageData(), image_data->GetImageSize());
     tout << "GetLiveView SUCCESS\n";
     delete[] image_buff; // Release
     delete image_data; // Release
@@ -4736,13 +4754,13 @@ void CameraDevice::change_live_view_enable()
     SDK::GetDeviceSetting(m_device_handle, SDK::Setting_Key_EnableLiveView, &current);
     tout << "EnableLiveView Current Setting Value:" << current;
 
-    tout << std::endl << "Are you sure you want to reverse EnableLiveView? (y/n) > ";
-    text yesno;
-    std::getline(cli::tin, yesno);
-    if (yesno != TEXT("y"))
-    {
-        return;
-    }
+    // tout << std::endl << "Are you sure you want to reverse EnableLiveView? (y/n) > ";
+    // text yesno;
+    // std::getline(cli::tin, yesno);
+    // if (yesno != TEXT("y"))
+    // {
+    //     return;
+    // }
 
     m_lvEnbSet = (current==0) ? true:false; // reverse
     SDK::SetDeviceSetting(m_device_handle, SDK::Setting_Key_EnableLiveView, (CrInt32u)m_lvEnbSet);

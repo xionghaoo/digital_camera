@@ -28,6 +28,8 @@ namespace SDK = SCRSDK;
 typedef std::shared_ptr<cli::CameraDevice> CameraDevicePtr;
 typedef std::vector<CameraDevicePtr> CameraDeviceList;
 
+static bool isLiveRunning = false;
+
 class SonyCamera {
     private:
         int initialize();
@@ -49,4 +51,6 @@ class SonyCamera {
         std::string get_save_path();
         void power_off();
         void power_on();
+        void live_view();
+        void enable_live_view(bool enable);
 };
