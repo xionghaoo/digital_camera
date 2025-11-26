@@ -172,11 +172,13 @@ void SonyCamera::live_view() {
         cli::tout << "camera not create\n";
         return;
     }
-    while (isLiveRunning) {
-        camera->change_live_view_enable();     
-        camera->get_live_view_only();        
-    }
-    std::cout << "live view exited" << std::endl;
+    liveThread = std::thread([&]() {
+        while (isLiveRunning) {
+            camera->change_live_view_enable();     
+            camera->get_live_view_only();        
+        }
+        std::cout << "live view exited" << std::endl;
+    });
 }
 
 void SonyCamera::enable_live_view(bool enable) {

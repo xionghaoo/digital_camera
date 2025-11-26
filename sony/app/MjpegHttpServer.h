@@ -6,23 +6,26 @@
 #include <thread>
 #include <mutex>
 #include <vector>
+#include <atomic>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include <sys/uio.h>
+#include <unistd.h>
+#include <iostream>
 
 class MjpegHttpServer {
     int serverFd = -1;
     std::vector<int> clients;
     std::mutex clientsMutex;
-    bool running = false;
-    std::thread acceptThread;
+    std::atomic<bool> running{false};
+    std::thread serverThread;
 
 public:
     bool start(int port) {
         serverFd = socket(AF_INET, SOCK_STREAM, 0);
+        if (serverFd < 0) return false;
+        
         int opt = 1;
         setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
         
@@ -35,8 +38,9 @@ public:
         if (listen(serverFd, 5) < 0) return false;
         
         running = true;
-        acceptThread = std::thread(&MjpegHttpServer::acceptLoop, this);
-        return true;
+        serverThread = std::thread(&MjpegHttpServer::acceptLoop, this);
+        std::cout << "mjpeag start" << std::endl;
+        return true;  // 立即返回，不阻塞主线程
     }
 
     void pushFrame(const char* jpegData, size_t size) {
@@ -48,7 +52,6 @@ public:
         
         std::lock_guard<std::mutex> lock(clientsMutex);
         for (auto it = clients.begin(); it != clients.end();) {
-            // 合并发送头和数据
             struct iovec iov[2];
             iov[0].iov_base = header;
             iov[0].iov_len = headerLen;
@@ -64,13 +67,25 @@ public:
         }
     }
 
+    bool isRunning() const { return running; }
+
     void stop() {
         running = false;
-        if (serverFd >= 0) { shutdown(serverFd, SHUT_RDWR); close(serverFd); }
-        if (acceptThread.joinable()) acceptThread.join();
+        if (serverFd >= 0) { 
+            std::cout << "mjpeag stop: serverFd shutdown" << std::endl;
+            shutdown(serverFd, SHUT_RDWR); 
+            std::cout << "mjpeag stop: serverFd close" << std::endl;
+            close(serverFd); 
+            serverFd = -1;
+        }
+        std::cout << "mjpeag stop: serverFd stopped" << std::endl;
+        if (serverThread.joinable()) serverThread.join();
+        std::cout << "mjpeag stop: serverThread join" << std::endl;
         std::lock_guard<std::mutex> lock(clientsMutex);
         for (int fd : clients) close(fd);
+        std::cout << "mjpeag stop: clients close" << std::endl;
         clients.clear();
+        std::cout << "mjpeag stop" << std::endl;
     }
 
     ~MjpegHttpServer() { stop(); }
@@ -78,28 +93,33 @@ public:
 private:
     void acceptLoop() {
         while (running) {
+            int fd = serverFd;
+            if (fd < 0) break;
+            fd_set readfds;
+            FD_ZERO(&readfds);
+            FD_SET(fd, &readfds);
+            timeval timeout{0, 100000};  // 100ms超时，更快响应stop
+            if (select(fd + 1, &readfds, nullptr, nullptr, &timeout) <= 0) continue;
+            
             int clientFd = accept(serverFd, nullptr, nullptr);
             if (clientFd < 0) continue;
             
-            // 禁用 Nagle
             int flag = 1;
             setsockopt(clientFd, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag));
             
-            // 读取并丢弃HTTP请求
             char buf[1024];
             recv(clientFd, buf, sizeof(buf), 0);
             
-            // 发送HTTP响应头
             const char* response = 
                 "HTTP/1.1 200 OK\r\n"
                 "Content-Type: multipart/x-mixed-replace; boundary=frame\r\n"
                 "Cache-Control: no-cache, no-store, must-revalidate\r\n"
-                "Pragma: no-cache\r\n"
                 "Connection: close\r\n\r\n";
             send(clientFd, response, strlen(response), 0);
             
             std::lock_guard<std::mutex> lock(clientsMutex);
             clients.push_back(clientFd);
         }
+        std::cout << "acceptLoop exit" << std::endl;
     }
 };

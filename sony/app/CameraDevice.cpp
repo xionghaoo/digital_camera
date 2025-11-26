@@ -134,7 +134,6 @@ CameraDevice::~CameraDevice()
 {
     if (m_modelNameProp)delete m_modelNameProp;
     if (m_info) m_info->Release();
-    server.stop();
 }
 
 void CameraDevice::setCompeletedCallback(std::function<void (std::string)>* cb) {
@@ -143,14 +142,10 @@ void CameraDevice::setCompeletedCallback(std::function<void (std::string)>* cb) 
 
 void CameraDevice::enable_live_view(bool enable) {
     if (enable) {
-        // if (!streamer.startHlsStream("/var/www/html/hls", 25)) {
-        //     tout << "启动推流失败\n";
-        //     return;
-        // }
-        // tout << "启动推流成功\n";   
+        tout << "启动推流\n";   
         server.start(8081);
-        tout << "启动推流成功\n";   
     } else {
+        tout << "停止推流\n";   
         server.stop();
     }
 }

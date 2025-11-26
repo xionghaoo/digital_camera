@@ -18,6 +18,7 @@ namespace fs = std::filesystem;
 #include <vector>
 #include <cstdint>
 #include <iomanip>
+#include <thread>
 #include "CRSDK/CameraRemote_SDK.h"
 #include "CameraDevice.h"
 #include "Text.h"
@@ -28,7 +29,7 @@ namespace SDK = SCRSDK;
 typedef std::shared_ptr<cli::CameraDevice> CameraDevicePtr;
 typedef std::vector<CameraDevicePtr> CameraDeviceList;
 
-static bool isLiveRunning = false;
+static std::atomic<bool> isLiveRunning{false};
 
 class SonyCamera {
     private:
@@ -39,7 +40,7 @@ class SonyCamera {
         CameraDevicePtr camera;
         bool isInitialized = false;
     public:
-        // std::function<void (std::string)>* onCaptureCompleted = nullptr;
+        std::thread liveThread;
         SDK::ICrEnumCameraObjectInfo* camera_list = nullptr;
         SonyCamera();
         ~SonyCamera();
