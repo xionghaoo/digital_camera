@@ -71,20 +71,21 @@ public:
 
     void stop() {
         running = false;
+        // 先关闭所有客户端，避免pushFrame阻塞
+        {
+            std::lock_guard<std::mutex> lock(clientsMutex);
+            for (int fd : clients) {
+                shutdown(fd, SHUT_RDWR);
+                close(fd);
+            }
+            clients.clear();
+        }
         if (serverFd >= 0) { 
-            std::cout << "mjpeag stop: serverFd shutdown" << std::endl;
             shutdown(serverFd, SHUT_RDWR); 
-            std::cout << "mjpeag stop: serverFd close" << std::endl;
             close(serverFd); 
             serverFd = -1;
         }
-        std::cout << "mjpeag stop: serverFd stopped" << std::endl;
         if (serverThread.joinable()) serverThread.join();
-        std::cout << "mjpeag stop: serverThread join" << std::endl;
-        std::lock_guard<std::mutex> lock(clientsMutex);
-        for (int fd : clients) close(fd);
-        std::cout << "mjpeag stop: clients close" << std::endl;
-        clients.clear();
         std::cout << "mjpeag stop" << std::endl;
     }
 
@@ -106,9 +107,15 @@ private:
             
             int flag = 1;
             setsockopt(clientFd, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag));
-            
+            timeval recvTimeout{2, 0};  // 2秒接收超时
+            setsockopt(clientFd, SOL_SOCKET, SO_RCVTIMEO, &recvTimeout, sizeof(recvTimeout));
+            timeval sendTimeout{2, 0};  // 2秒发送超时
+            setsockopt(clientFd, SOL_SOCKET, SO_SNDTIMEO, &sendTimeout, sizeof(sendTimeout));
             char buf[1024];
-            recv(clientFd, buf, sizeof(buf), 0);
+            if (recv(clientFd, buf, sizeof(buf), 0) <= 0) {
+                close(clientFd);
+                continue;
+            }
             
             const char* response = 
                 "HTTP/1.1 200 OK\r\n"
