@@ -122,13 +122,14 @@ bool SonyCamera::connect(int index) {
     return true;
 }
 
-bool SonyCamera::af_shutter() {
+bool SonyCamera::af_shutter(std::function<void (std::string)>* cb) {
     if (camera == nullptr) {
         cli::tout << "camera not create\n";
         return false;
     }
     // Shutter Half and Full Release in AF mode
     cli::tout << "Shutter Half and Full Release in AF mode\n";
+    camera->setCompeletedCallback(cb);
     camera->af_shutter();
     return true;
 }

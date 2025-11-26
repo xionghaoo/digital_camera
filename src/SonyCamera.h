@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdlib>
 #if defined(USE_EXPERIMENTAL_FS)
 #include <experimental/filesystem>
@@ -12,6 +14,7 @@ namespace fs = std::filesystem;
 
 #include <string>
 #include <iostream>
+#include <functional>
 #include <vector>
 #include <cstdint>
 #include <iomanip>
@@ -34,13 +37,14 @@ class SonyCamera {
         CameraDevicePtr camera;
         bool isInitialized = false;
     public:
+        // std::function<void (std::string)>* onCaptureCompleted = nullptr;
         SDK::ICrEnumCameraObjectInfo* camera_list = nullptr;
         SonyCamera();
         ~SonyCamera();
         std::string version();
         std::string scan();
         bool connect(int index);
-        bool af_shutter();
+        bool af_shutter(std::function<void (std::string)>* cb);
         bool capture();
         std::string get_save_path();
         void power_off();

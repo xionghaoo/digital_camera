@@ -53,9 +53,13 @@ typedef std::vector<SCRSDK::CrMediaProfileInfo*> MediaProfileList;
 class CameraDevice : public SCRSDK::IDeviceCallback
 {
 public:
+    std::function<void (std::string)>* onCaptureCompleted = nullptr;
+
     CameraDevice() = delete;
     CameraDevice(std::int32_t no, SCRSDK::ICrCameraObjectInfo const* camera_info);
     ~CameraDevice();
+
+    void setCompeletedCallback(std::function<void (std::string)>* cb);
 
     // Get fingerprint
     bool getfingerprint();

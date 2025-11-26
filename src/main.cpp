@@ -71,14 +71,11 @@ int main() {
         })
         .registerHandler("/af-shutter", [](const drogon::HttpRequestPtr& req,
                     std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
-            auto resp = drogon::HttpResponse::newHttpResponse();
-            resp->setContentTypeString("application/json; charset=utf-8");
-            json data;
-            bool success = camera.af_shutter();
-            data["code"] = 0;
-            data["data"] = success;
-            resp->setBody(data.dump());
-            cb(resp);
+            std::function<void (std::string)> callback = [&](std::string path) {
+                auto resp = drogon::HttpResponse::newFileResponse(path.c_str());
+                cb(resp);
+            };
+            bool success = camera.af_shutter(&callback);
         })
         .registerHandler("/capture", [](const drogon::HttpRequestPtr& req,
                     std::function<void(const drogon::HttpResponsePtr&)>&& cb) {

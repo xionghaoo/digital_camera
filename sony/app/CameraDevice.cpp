@@ -133,6 +133,10 @@ CameraDevice::~CameraDevice()
     if (m_info) m_info->Release();
 }
 
+void CameraDevice::setCompeletedCallback(std::function<void (std::string)>* cb) {
+    this->onCaptureCompleted = cb;
+}
+
 bool CameraDevice::getfingerprint()
 {
     CrInt32u fpLen = 0;
@@ -4793,6 +4797,9 @@ void CameraDevice::OnCompleteDownload(CrChar* filename, CrInt32u type )
     {
     case SCRSDK::CrDownloadSettingFileType_None:
         tout << "Complete download. File: " << file.data() << '\n';
+        if (onCaptureCompleted != nullptr) {
+            (*onCaptureCompleted)(std::string(file.data()));
+        }
         break;
     case SCRSDK::CrDownloadSettingFileType_Setup:
         tout << "Complete download. Camera Setting File: " << file.data() << '\n';
