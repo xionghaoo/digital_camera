@@ -132,3 +132,36 @@ bool SonyCamera::af_shutter() {
     camera->af_shutter();
     return true;
 }
+
+bool SonyCamera::capture() {
+    if (camera == nullptr) {
+        cli::tout << "camera not create\n";
+        return false;
+    }
+    camera->capture_image();
+    return true;
+}
+
+std::string SonyCamera::get_save_path() {
+    if (camera == nullptr) {
+        cli::tout << "camera not create\n";
+        return "";
+    }
+    return camera->get_save_info();
+}
+
+void SonyCamera::power_off() {
+    if (camera == nullptr) {
+        cli::tout << "camera not create\n";
+        return;
+    }
+    camera->power_off();
+}
+
+void SonyCamera::power_on() {
+    if (camera == nullptr) {
+        cli::tout << "camera not create\n";
+        return;
+    }
+    camera->power_on();
+}

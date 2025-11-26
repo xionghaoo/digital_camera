@@ -131,6 +131,7 @@ public:
     bool get_time_shift_shooting();
     void get_osd_image();
     bool get_zoom_position_setting();
+    std::string get_save_info() const;
 
     void set_aperture();
     void set_iso();
@@ -282,6 +283,9 @@ public:
     void control_ptzf();
     void clear_ptzf_preset();
     void set_ptzf_preset();
+
+    void power_off();
+    void power_on();
 
 public:
     // Inherited via IDeviceCallback

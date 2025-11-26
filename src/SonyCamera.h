@@ -41,4 +41,8 @@ class SonyCamera {
         std::string scan();
         bool connect(int index);
         bool af_shutter();
+        bool capture();
+        std::string get_save_path();
+        void power_off();
+        void power_on();
 };

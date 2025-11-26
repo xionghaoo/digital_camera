@@ -1550,6 +1550,11 @@ bool CameraDevice::get_time_shift_shooting()
     return true;
 }
 
+std::string CameraDevice::get_save_info() const {
+    text path = fs::current_path().native();
+    return path;
+}
+
 void CameraDevice::set_aperture()
 {
     if (1 != m_prop.f_number.writable) {
@@ -9652,6 +9657,22 @@ void CameraDevice::set_ptzf_preset()
 
     tout << "Success to Request Clear PTZF Preset.\n";
     return;
+}
+
+void CameraDevice::power_off() {
+    tout << "power_off\n";
+    SDK::SendCommand(m_device_handle, SDK::CrCommandId::CrCommandId_PowerOff, SDK::CrCommandParam::CrCommandParam_Down);
+}
+
+void CameraDevice::power_on() {
+    tout << "power_on\n";
+    // SDK::SendCommand(m_device_handle, SDK::CrCommandId::CrCommandId_PowerOn, SDK::CrCommandParam::CrCommandParam_Up);
+    // std::this_thread::sleep_for(35ms);
+    // tout << "power down\n";
+    // SDK::SendCommand(m_device_handle, SDK::CrCommandId::CrCommandId_PowerOn, SDK::CrCommandParam::CrCommandParam_Down);
+    SCRSDK::SendCommand(m_device_handle, SDK::CrCommandId::CrCommandId_Release, SDK::CrCommandParam::CrCommandParam_Down);
+    std::this_thread::sleep_for(1000ms);
+    SCRSDK::SendCommand(m_device_handle, SDK::CrCommandId::CrCommandId_Release, SDK::CrCommandParam::CrCommandParam_Up);
 }
 
 }

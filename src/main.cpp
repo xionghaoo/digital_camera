@@ -80,6 +80,38 @@ int main() {
             resp->setBody(data.dump());
             cb(resp);
         })
+        .registerHandler("/capture", [](const drogon::HttpRequestPtr& req,
+                    std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
+            auto resp = drogon::HttpResponse::newHttpResponse();
+            resp->setContentTypeString("application/json; charset=utf-8");
+            json data;
+            bool success = camera.capture();
+            std::string path = camera.get_save_path();
+            data["code"] = 0;
+            data["data"] = path;
+            resp->setBody(data.dump());
+            cb(resp);
+        })
+        .registerHandler("/power", [](const drogon::HttpRequestPtr& req,
+                    std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
+            bool powerOn = false;
+            if (req->getContentType() == drogon::CT_APPLICATION_JSON) {
+                auto jsonPtr = req->getJsonObject();
+                powerOn = jsonPtr->get("is_open", false).asBool();
+            }
+            auto resp = drogon::HttpResponse::newHttpResponse();
+            resp->setContentTypeString("application/json; charset=utf-8");
+            json data;
+            if (powerOn) {
+                camera.power_on();
+            } else {
+                camera.power_off();
+            }
+            data["code"] = 0;
+            data["data"] = nullptr;
+            resp->setBody(data.dump());
+            cb(resp);
+        })
         .addListener("0.0.0.0", 8080)
         .run();
 }
