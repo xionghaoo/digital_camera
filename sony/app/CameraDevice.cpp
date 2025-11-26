@@ -45,7 +45,7 @@ namespace fs = std::filesystem;
 #else
 #include <conio.h>
 #endif
-#include "FFmpegStreamer.h"
+#include "MjpegHttpServer.h"
 
 
 // Enumerator
@@ -83,7 +83,7 @@ using namespace std::chrono_literals;
 
 constexpr int const ImageSaveAutoStartNo = -1;
 
-FFmpegStreamer streamer;
+MjpegHttpServer server;
 
 namespace cli
 {
@@ -134,7 +134,7 @@ CameraDevice::~CameraDevice()
 {
     if (m_modelNameProp)delete m_modelNameProp;
     if (m_info) m_info->Release();
-    streamer.stop();
+    server.stop();
 }
 
 void CameraDevice::setCompeletedCallback(std::function<void (std::string)>* cb) {
@@ -143,13 +143,15 @@ void CameraDevice::setCompeletedCallback(std::function<void (std::string)>* cb) 
 
 void CameraDevice::enable_live_view(bool enable) {
     if (enable) {
-        if (!streamer.startHlsStream("/var/www/html/hls", 25)) {
-            tout << "启动推流失败\n";
-            return;
-        }
+        // if (!streamer.startHlsStream("/var/www/html/hls", 25)) {
+        //     tout << "启动推流失败\n";
+        //     return;
+        // }
+        // tout << "启动推流成功\n";   
+        server.start(8081);
         tout << "启动推流成功\n";   
     } else {
-        streamer.stop();
+        server.stop();
     }
 }
 
@@ -609,7 +611,7 @@ void CameraDevice::get_live_view_only()
     //     file.write((char*)image_data->GetImageData(), image_data->GetImageSize());
     //     file.close();
     // }
-    streamer.pushFrame((char*)image_data->GetImageData(), image_data->GetImageSize());
+    server.pushFrame((char*)image_data->GetImageData(), image_data->GetImageSize());
     tout << "GetLiveView SUCCESS\n";
     delete[] image_buff; // Release
     delete image_data; // Release
