@@ -45,7 +45,11 @@ namespace fs = std::filesystem;
 #else
 #include <conio.h>
 #endif
+#ifdef _USE_RTSP_
+#include "FFmpegStreamer.h"
+#else
 #include "MjpegHttpServer.h"
+#endif
 
 
 // Enumerator
@@ -83,7 +87,11 @@ using namespace std::chrono_literals;
 
 constexpr int const ImageSaveAutoStartNo = -1;
 
+#ifdef _USE_RTSP_
+FFmpegStreamer server;
+#else
 MjpegHttpServer server;
+#endif
 
 namespace cli
 {
@@ -143,7 +151,11 @@ void CameraDevice::setCompeletedCallback(std::function<void (std::string)>* cb) 
 void CameraDevice::enable_live_view(bool enable) {
     if (enable) {
         tout << "启动推流\n";   
+#ifdef _USE_RTSP_
+        server.startRtmpStream("rtmp://120.25.49.109:21935/live/stream_5?sign=kjGKfDYESC", 25, 2000);
+#else
         server.start(8081);
+#endif
     } else {
         tout << "停止推流\n";   
         server.stop();

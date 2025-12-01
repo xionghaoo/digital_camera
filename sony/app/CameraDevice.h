@@ -13,6 +13,8 @@ typedef int errno_t;
 // End Linux definitions
 #endif
 
+#define _USE_RTSP_
+
 #include <atomic>
 #include <cstdint>
 #include <condition_variable>
