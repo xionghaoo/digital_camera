@@ -1,4 +1,5 @@
 #include "SonyCamera.h"
+#include "SonyCameraShutterWake.h"
 
 int SonyCamera::initialize()
 {
@@ -200,48 +201,22 @@ void SonyCamera::power_off() {
 }
 
 void SonyCamera::power_on() {
-    if (camera == nullptr) {
-        cli::tout << "camera not create\n";
-        return;
-    }
-    camera->power_on();
+    // if (camera == nullptr) {
+    //     cli::tout << "camera not create\n";
+    //     return;
+    // }
+    // camera->power_on();
 
-    // SonyCameraUSB usbcamera;
-    
-    // std::cout << "Searching for Sony camera via USB..." << std::endl;
-    
-    // // 1. 查找并连接相机（即使关机状态也能找到USB设备）
-    // if (!usbcamera.findCamera()) {
-    //     std::cerr << "Sony camera not found. Please check USB connection." << std::endl;
-    //     return;
-    // }
-    
-    // std::cout << "Camera found, connecting..." << std::endl;
-    
-    // // 2. 连接USB设备
+    // 关机后USB无法打开
+    // SonyCameraShutterWake camera;
+    // std::cout << "=== Sony Camera Shutter Wake Example ===" << std::endl;
+    // // 1. 连接相机（即使关机状态也能连接USB）
+    // std::cout << "\n1. Connecting to camera via USB..." << std::endl;
     // if (!camera.connect()) {
-    //     std::cerr << "Failed to connect to camera" << std::endl;
+    //     std::cerr << "Failed to connect to camera. Please check USB connection." << std::endl;
     //     return;
     // }
-    
-    // std::cout << "Connected via USB" << std::endl;
-    
-    // // 3. 发送开机命令（即使相机在关机状态）
-    // std::cout << "Sending power on command..." << std::endl;
-    // if (!camera.powerOn()) {
-    //     std::cerr << "Failed to power on camera" << std::endl;
-    //     return;
-    // }
-    
-    // std::cout << "Camera power on command sent successfully" << std::endl;
-    // std::cout << "Waiting for camera to boot..." << std::endl;
-    
-    // // 4. 等待相机启动（通常需要几秒）
-    // std::this_thread::sleep_for(std::chrono::seconds(5));
-    
-    // // 5. 现在可以断开USB，改用网络连接SDK
-    // camera.disconnect();
-    // std::cout << "Camera should be powered on now. You can connect via network SDK." << std::endl;
+    // std::cout << "Connected successfully" << std::endl;
 }
 
 void SonyCamera::live_view() {

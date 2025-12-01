@@ -78,6 +78,12 @@ target_link_directories(${digitalcamera} PRIVATE "${obsbot_dir}/libs")
 target_link_libraries(${digitalcamera} PRIVATE dev)
 
 target_link_libraries(${digitalcamera} PRIVATE 
+    ${ldir}/crsdk/CrAdapter/libCr_PTP_IP.so
+    ${ldir}/crsdk/CrAdapter/libCr_PTP_USB.so
+    ${ldir}/crsdk/CrAdapter/libssh2.so
+    ${ldir}/crsdk/CrAdapter/libusb-1.0.so
+)
+target_link_libraries(${digitalcamera} PRIVATE 
     ${ldir}/opencv/Linux/libopencv_core.so.408
     ${ldir}/opencv/Linux/libopencv_highgui.so.408
     ${ldir}/opencv/Linux/libopencv_imgcodecs.so.408
