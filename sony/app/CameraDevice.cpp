@@ -9701,8 +9701,8 @@ void CameraDevice::power_off() {
 void CameraDevice::power_on() {
     tout << "power_on\n";
     SDK::SendCommand(m_device_handle, SDK::CrCommandId::CrCommandId_PowerOn, SDK::CrCommandParam::CrCommandParam_Down);
-    // std::this_thread::sleep_for(35ms);
-    // SDK::SendCommand(m_device_handle, SDK::CrCommandId::CrCommandId_PowerOn, SDK::CrCommandParam::CrCommandParam_Up);
+    std::this_thread::sleep_for(35ms);
+    SDK::SendCommand(m_device_handle, SDK::CrCommandId::CrCommandId_PowerOn, SDK::CrCommandParam::CrCommandParam_Up);
     
     s1_shooting();
     // SDK::SendCommand(m_device_handle, SDK::CrCommandId::CrCommandId_Release, SDK::CrCommandParam::CrCommandParam_Down);

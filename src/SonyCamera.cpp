@@ -201,11 +201,14 @@ void SonyCamera::power_off() {
 }
 
 void SonyCamera::power_on() {
-    // if (camera == nullptr) {
-    //     cli::tout << "camera not create\n";
-    //     return;
-    // }
-    // camera->power_on();
+    // 对USB口重新插拔可以开机
+    // 1. 系统层面控制USB插拔或者断电都没有效果
+    // 2. 只能使用USB可控继电器的方式物理控制USB断电重连
+    if (camera == nullptr) {
+        cli::tout << "camera not create\n";
+        return;
+    }
+    camera->power_on();
 
     // 关机后USB无法打开
     // SonyCameraShutterWake camera;
