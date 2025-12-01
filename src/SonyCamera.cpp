@@ -6,7 +6,7 @@ int SonyCamera::initialize()
     auto init_success = SDK::Init();
     if (!init_success) {
         cli::tout << "Failed to initialize Remote SDK. Terminating.\n";
-        SDK::Release();
+        release();
         return -1;
     }
     cli::tout << "Remote SDK successfully initialized.\n\n";
@@ -15,6 +15,7 @@ int SonyCamera::initialize()
 }
 
 int SonyCamera::release() {
+    if (!isInitialized) return -1;
     // relese cameras
     CameraDeviceList::const_iterator it = cameraList.begin();
     for (std::int32_t j = 0; it != cameraList.end(); ++j, ++it) {
@@ -34,6 +35,7 @@ int SonyCamera::release() {
     }
     SDK::Release();
     isInitialized = false;
+    std::cout << "release camera" << std::endl;
     return 0;
 }
 
@@ -69,7 +71,7 @@ std::string SonyCamera::scan() {
     auto enum_status = SDK::EnumCameraObjects(&camera_list);
     if (CR_FAILED(enum_status) || camera_list == nullptr) {
         cli::tout << "No cameras detected. Connect a camera and retry.\n";
-        SDK::Release();
+        release();
         return ret.dump();
     }
     auto ncams = camera_list->GetCount();
@@ -122,6 +124,44 @@ bool SonyCamera::connect(int index) {
     return true;
 }
 
+bool SonyCamera::connect_with_usb() {
+    SDK::CrError err = SDK::CrError_None;
+
+    CrChar* serialNum = new CrChar[SDK::USB_SERIAL_LENGTH + 1];
+    int serialSiz = sizeof(CrChar) * (SDK::USB_SERIAL_LENGTH + 1);
+    memset(serialNum, 0, serialSiz);
+    strncpy((char*)serialNum, "D18D5074C0AE", serialSiz);
+    SDK::CrCameraDeviceModelList usbModel = SDK::CrCameraDeviceModelList::CrCameraDeviceModel_ZV_E10M2;
+    SDK::ICrCameraObjectInfo* pCam = nullptr;
+    typedef std::shared_ptr<cli::CameraDevice> CameraDevicePtr;
+    typedef std::vector<CameraDevicePtr> CameraDeviceList;
+
+    // CameraDeviceList cameraList; // all
+    std::int32_t cameraNumUniq = 1;
+    std::int32_t selectCamera = 1;
+    // CameraDevicePtr camera;
+     // USB
+    pCam = nullptr;
+    err = SDK::CreateCameraObjectInfoUSBConnection(&pCam, usbModel, (unsigned char*)serialNum);
+    if (err == 0) {
+        cli::tout << "[" << cameraNumUniq << "] " << pCam->GetModel() << "(" << (TCHAR*)pCam->GetId() << ")\n";
+        camera = CameraDevicePtr(new cli::CameraDevice(cameraNumUniq, pCam));
+        cameraList.push_back(camera);
+        // camera_list->Release();
+
+        if (camera->is_connected()) {
+            cli::tout << "Please disconnect\n";
+            return false;
+        } else {
+             cli::tout << "connect...\n";
+            camera->connect(SDK::CrSdkControlMode_Remote, SDK::CrReconnecting_ON);
+        }
+        cameraNumUniq++;
+        return true;
+    }
+    return false;
+}
+
 bool SonyCamera::af_shutter(std::function<void (std::string)>* cb) {
     if (camera == nullptr) {
         cli::tout << "camera not create\n";
@@ -139,7 +179,7 @@ bool SonyCamera::capture() {
         cli::tout << "camera not create\n";
         return false;
     }
-    camera->capture_image();
+    camera->s1_shooting();
     return true;
 }
 
@@ -165,6 +205,43 @@ void SonyCamera::power_on() {
         return;
     }
     camera->power_on();
+
+    // SonyCameraUSB usbcamera;
+    
+    // std::cout << "Searching for Sony camera via USB..." << std::endl;
+    
+    // // 1. 查找并连接相机（即使关机状态也能找到USB设备）
+    // if (!usbcamera.findCamera()) {
+    //     std::cerr << "Sony camera not found. Please check USB connection." << std::endl;
+    //     return;
+    // }
+    
+    // std::cout << "Camera found, connecting..." << std::endl;
+    
+    // // 2. 连接USB设备
+    // if (!camera.connect()) {
+    //     std::cerr << "Failed to connect to camera" << std::endl;
+    //     return;
+    // }
+    
+    // std::cout << "Connected via USB" << std::endl;
+    
+    // // 3. 发送开机命令（即使相机在关机状态）
+    // std::cout << "Sending power on command..." << std::endl;
+    // if (!camera.powerOn()) {
+    //     std::cerr << "Failed to power on camera" << std::endl;
+    //     return;
+    // }
+    
+    // std::cout << "Camera power on command sent successfully" << std::endl;
+    // std::cout << "Waiting for camera to boot..." << std::endl;
+    
+    // // 4. 等待相机启动（通常需要几秒）
+    // std::this_thread::sleep_for(std::chrono::seconds(5));
+    
+    // // 5. 现在可以断开USB，改用网络连接SDK
+    // camera.disconnect();
+    // std::cout << "Camera should be powered on now. You can connect via network SDK." << std::endl;
 }
 
 void SonyCamera::live_view() {

@@ -325,13 +325,13 @@ void CameraDevice::capture_image() const
 
 void CameraDevice::s1_shooting() const
 {
-    text input;
-    tout << "Is the focus mode set to AF? (y/n): ";
-    std::getline(tin, input);
-    if (input != TEXT("y")) {
-        tout << "Set the focus mode to AF\n";
-        return;
-    }
+    // text input;
+    // tout << "Is the focus mode set to AF? (y/n): ";
+    // std::getline(tin, input);
+    // if (input != TEXT("y")) {
+    //     tout << "Set the focus mode to AF\n";
+    //     return;
+    // }
 
     tout << "S1 shooting...\n";
     tout << "Shutter Half Press down\n";
@@ -9700,13 +9700,14 @@ void CameraDevice::power_off() {
 
 void CameraDevice::power_on() {
     tout << "power_on\n";
-    // SDK::SendCommand(m_device_handle, SDK::CrCommandId::CrCommandId_PowerOn, SDK::CrCommandParam::CrCommandParam_Up);
+    SDK::SendCommand(m_device_handle, SDK::CrCommandId::CrCommandId_PowerOn, SDK::CrCommandParam::CrCommandParam_Down);
     // std::this_thread::sleep_for(35ms);
-    // tout << "power down\n";
-    // SDK::SendCommand(m_device_handle, SDK::CrCommandId::CrCommandId_PowerOn, SDK::CrCommandParam::CrCommandParam_Down);
-    SCRSDK::SendCommand(m_device_handle, SDK::CrCommandId::CrCommandId_Release, SDK::CrCommandParam::CrCommandParam_Down);
-    std::this_thread::sleep_for(1000ms);
-    SCRSDK::SendCommand(m_device_handle, SDK::CrCommandId::CrCommandId_Release, SDK::CrCommandParam::CrCommandParam_Up);
+    // SDK::SendCommand(m_device_handle, SDK::CrCommandId::CrCommandId_PowerOn, SDK::CrCommandParam::CrCommandParam_Up);
+    
+    s1_shooting();
+    // SDK::SendCommand(m_device_handle, SDK::CrCommandId::CrCommandId_Release, SDK::CrCommandParam::CrCommandParam_Down);
+    // std::this_thread::sleep_for(35ms);
+    // SDK::SendCommand(m_device_handle, SDK::CrCommandId::CrCommandId_Release, SDK::CrCommandParam::CrCommandParam_Up);
 }
 
 }

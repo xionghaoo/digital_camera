@@ -47,6 +47,7 @@ class SonyCamera {
         std::string version();
         std::string scan();
         bool connect(int index);
+        bool connect_with_usb();
         bool af_shutter(std::function<void (std::string)>* cb);
         bool capture();
         std::string get_save_path();
