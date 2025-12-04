@@ -25,19 +25,30 @@ public:
     static constexpr bool isAutoCreation = false;
     
     METHOD_LIST_BEGIN
-        // 使用宏自动注册到文档
-        ADD_METHOD_WITH_DOC(UserController, getUser, "/api/user/{id}", Get,
-                           "获取用户信息", "根据用户ID获取用户详细信息");
-        ADD_METHOD_WITH_DOC(UserController, getUserList, "/api/user", Get,
-                           "获取用户列表", "获取所有用户列表，支持分页和搜索");
-        ADD_METHOD_WITH_DOC(UserController, createUser, "/api/user", Post,
-                           "创建用户", "创建新用户，需要提供姓名、邮箱等信息");
-        ADD_METHOD_WITH_DOC(UserController, updateUser, "/api/user/{id}", Put,
-                           "更新用户", "更新指定用户的信息");
-        ADD_METHOD_WITH_DOC(UserController, deleteUser, "/api/user/{id}", Delete,
-                           "删除用户", "删除指定用户");
-        ADD_METHOD_WITH_DOC(UserController, searchUser, "/api/user/search", Get,
-                           "搜索用户", "根据关键词搜索用户");
+        // 使用自动文档生成宏（自动提取路径参数、添加标准响应等）
+        ADD_METHOD_WITH_AUTO_DOC(UserController, getUser, "/api/user/{id}", Get,
+                                 "获取用户信息", "根据用户ID获取用户详细信息");
+        
+        // 带分页的自动文档（自动添加 page 和 pageSize 参数）
+        ADD_METHOD_WITH_PAGINATION(UserController, getUserList, "/api/user", Get,
+                                   "获取用户列表", "获取所有用户列表，支持分页和搜索");
+        
+        // POST 请求自动文档（自动添加请求体 Schema）
+        ADD_METHOD_WITH_AUTO_DOC(UserController, createUser, "/api/user", Post,
+                                 "创建用户", "创建新用户，需要提供姓名、邮箱等信息");
+        
+        // PUT 请求自动文档（自动提取路径参数，添加请求体）
+        ADD_METHOD_WITH_AUTO_DOC(UserController, updateUser, "/api/user/{id}", Put,
+                                 "更新用户", "更新指定用户的信息");
+        
+        // DELETE 请求自动文档
+        ADD_METHOD_WITH_AUTO_DOC(UserController, deleteUser, "/api/user/{id}", Delete,
+                                 "删除用户", "删除指定用户");
+        
+        // 带查询参数的自动文档
+        ADD_METHOD_WITH_QUERY_PARAMS(UserController, searchUser, "/api/user/search", Get,
+                                     "搜索用户", "根据关键词搜索用户",
+                                     "q:string:搜索关键词，必填");
     METHOD_LIST_END
 
     // 模拟数据库（实际项目中应该使用真实的数据库）
@@ -54,6 +65,7 @@ public:
     {
         // 初始化一些示例数据
         initSampleData();
+        // 注意：API 文档已通过 METHOD_LIST_BEGIN 中的宏自动注册，无需手动调用
     }
 
     // GET /api/user/{id} - 获取用户信息

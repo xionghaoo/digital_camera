@@ -49,7 +49,7 @@ int main() {
     cli::tin.imbue(std::locale());
     cli::tout.imbue(std::locale());
     
-    drogon::app().registerController(std::make_shared<UserController>());
+    // drogon::app().registerController(std::make_shared<UserController>());
     drogon::app().registerController(std::make_shared<CameraController>());
     // 注册文档控制器
     drogon::app().registerController(std::make_shared<DocController>());
@@ -65,27 +65,6 @@ int main() {
             auto resp = drogon::HttpResponse::newHttpResponse();
             std::string version = camera.version();
             resp->setBody(version.c_str());
-            cb(resp);
-        })
-        .registerHandler("/device/connect", [](const drogon::HttpRequestPtr& req,
-                    std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
-            int index = -1;
-            if (req->getContentType() == drogon::CT_APPLICATION_JSON) {
-                auto jsonPtr = req->getJsonObject();
-                index = jsonPtr->get("index", 0).asInt();
-            }
-            auto resp = drogon::HttpResponse::newHttpResponse();
-            resp->setContentTypeString("application/json; charset=utf-8");
-            json data;
-            if (index <= 0) {
-                data["code"] = -1;
-                data["data"] = false;
-            } else {
-                bool success = camera.connect(index);
-                data["code"] = 0;
-                data["data"] = success;
-            }
-            resp->setBody(data.dump());
             cb(resp);
         })
         .registerHandler("/af-shutter", [](const drogon::HttpRequestPtr& req,
@@ -144,26 +123,6 @@ int main() {
             resp->setContentTypeString("application/json; charset=utf-8");
             json data;
             camera.live_view();
-            data["code"] = 0;
-            data["data"] = nullptr;
-            resp->setBody(data.dump());
-            cb(resp);
-        })
-        .registerHandler("/power", [](const drogon::HttpRequestPtr& req,
-                    std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
-            bool powerOn = false;
-            if (req->getContentType() == drogon::CT_APPLICATION_JSON) {
-                auto jsonPtr = req->getJsonObject();
-                powerOn = jsonPtr->get("is_open", false).asBool();
-            }
-            auto resp = drogon::HttpResponse::newHttpResponse();
-            resp->setContentTypeString("application/json; charset=utf-8");
-            json data;
-            if (powerOn) {
-                camera.power_on();
-            } else {
-                camera.power_off();
-            }
             data["code"] = 0;
             data["data"] = nullptr;
             resp->setBody(data.dump());
