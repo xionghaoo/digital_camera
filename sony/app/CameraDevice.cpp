@@ -147,7 +147,7 @@ bool CameraDevice::enable_live_view(bool enable, bool isLocal, std::string& rtmp
     if (enable) {
         tout << "启动推流\n";   
         if (isLocal) {
-            ret = serverLocal.start(8081);
+            ret = serverLocal.start(9091);
         } else {
             ret = server.startRtmpStream(rtmpUrl, 25, 2000);
             // server.startRtmpStream("rtmp://120.25.49.109:21935/live/stream_5?sign=kjGKfDYESC", 25, 2000);
