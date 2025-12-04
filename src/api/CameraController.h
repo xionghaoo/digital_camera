@@ -24,6 +24,12 @@ public:
         // 使用宏自动注册到文档
         ADD_METHOD_WITH_DOC(CameraController, scan, "/api/camera/scan", Post,
                            "相机设备扫描", "扫描wifi/usb相机设备");
+        ADD_METHOD_WITH_DOC(CameraController, connect, "/api/camera/connect", Post,
+                           "相机连接", "通过序号连接相机设备，需要先扫描相机");
+        ADD_METHOD_WITH_DOC(CameraController, usbConnect, "/api/camera/connect/usb", Post,
+                           "相机USB连接", "通过USB接口连接相机");
+        ADD_METHOD_WITH_DOC(CameraController, power, "/api/camera/power", Post,
+                           "相机电源控制", "控制相机开关机，目前只有关机可用");
     METHOD_LIST_END
 
     CameraController() {};
@@ -49,6 +55,8 @@ public:
             return;
         }
 
+        std::lock_guard<std::mutex> lock(cameraMutex_);
+
         std::string deviceType = (*json)["device_type"].asString();
         if (deviceType == "sony") {
             Json::Value data = camera.scan();
@@ -60,7 +68,70 @@ public:
         }
     }
 
+    void connect(const HttpRequestPtr& req,
+                    std::function<void(const HttpResponsePtr&)>&& callback,
+                    const std::string& indexStr) 
+    {
+        int index = -1;
+        try {
+            index = std::stoi(indexStr);
+        } catch (const std::exception& e) {
+            sendErrorResponse(std::move(callback), 400, "相机序号格式错误", k400BadRequest);
+            return;
+        }
+        
+        std::lock_guard<std::mutex> lock(cameraMutex_);
+        bool success = camera.connect(index);
+        Json::Value data = success;
+        sendSuccessResponse(std::move(callback), "success", data, k200OK);
+    }
+
+    void usbConnect(const HttpRequestPtr& req,
+                    std::function<void(const HttpResponsePtr&)>&& callback) 
+    {
+        std::lock_guard<std::mutex> lock(cameraMutex_);       
+        bool success = camera.connect_with_usb();
+        Json::Value data = success;
+        if (success) {
+            sendSuccessResponse(std::move(callback), "success", data, k200OK);
+        } else {
+            sendErrorResponse(std::move(callback), -2, "相机连接失败", k200OK);
+        }
+    }
+
+    void power(const HttpRequestPtr& req,
+                    std::function<void(const HttpResponsePtr&)>&& callback) 
+    {
+         // 使用基类的验证方法
+        const Json::Value* json = validateJsonRequest(req);
+        if (!json) {
+            sendErrorResponse(std::move(callback), 400, "请求体格式错误，需要JSON格式", k400BadRequest);
+            return;
+        }
+        
+        // 验证必填字段
+        std::vector<std::string> missingFields = validateRequiredFields(json, {"power_on"});
+        if (!missingFields.empty()) {
+            std::string message = "缺少必填字段: " + missingFields[0];
+            for (size_t i = 1; i < missingFields.size(); ++i) {
+                message += ", " + missingFields[i];
+            }
+            sendErrorResponse(std::move(callback), 400, message, k400BadRequest);
+            return;
+        }
+        
+        std::lock_guard<std::mutex> lock(cameraMutex_);       
+        bool powerOn = (*json)["power_on"].asBool();
+        if (powerOn) {
+            camera.power_on();
+        } else {
+            camera.power_off();
+        }
+        Json::Value data = true;
+        sendSuccessResponse(std::move(callback), "success", data, k200OK);
+    }
+
 private:
-    std::mutex usersMutex_;
+    std::mutex cameraMutex_;
     SonyCamera camera;
 };

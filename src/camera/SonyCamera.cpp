@@ -125,6 +125,9 @@ bool SonyCamera::connect(int index) {
 }
 
 bool SonyCamera::connect_with_usb() {
+    if (!isInitialized) {
+        initialize();
+    }
     SDK::CrError err = SDK::CrError_None;
 
     CrChar* serialNum = new CrChar[SDK::USB_SERIAL_LENGTH + 1];
@@ -143,23 +146,22 @@ bool SonyCamera::connect_with_usb() {
      // USB
     pCam = nullptr;
     err = SDK::CreateCameraObjectInfoUSBConnection(&pCam, usbModel, (unsigned char*)serialNum);
+    bool ret = false;
     if (err == 0) {
         cli::tout << "[" << cameraNumUniq << "] " << pCam->GetModel() << "(" << (TCHAR*)pCam->GetId() << ")\n";
         camera = CameraDevicePtr(new cli::CameraDevice(cameraNumUniq, pCam));
         cameraList.push_back(camera);
         // camera_list->Release();
-
         if (camera->is_connected()) {
             cli::tout << "Please disconnect\n";
-            return false;
         } else {
-             cli::tout << "connect...\n";
-            camera->connect(SDK::CrSdkControlMode_Remote, SDK::CrReconnecting_ON);
+            cli::tout << "connect...\n";
+            ret = camera->connect(SDK::CrSdkControlMode_Remote, SDK::CrReconnecting_ON);
+            cli::tout << "connect result: " << ret << std::endl;
         }
         cameraNumUniq++;
-        return true;
     }
-    return false;
+    return ret;
 }
 
 bool SonyCamera::af_shutter(std::function<void (std::string)>* cb) {

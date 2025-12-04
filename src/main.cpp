@@ -169,17 +169,6 @@ int main() {
             resp->setBody(data.dump());
             cb(resp);
         })
-        .registerHandler("/usb-connect", [](const drogon::HttpRequestPtr& req,
-                    std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
-            auto resp = drogon::HttpResponse::newHttpResponse();
-            resp->setContentTypeString("application/json; charset=utf-8");
-            bool success = camera.connect_with_usb();
-            json data;
-            data["code"] = 0;
-            data["data"] = success;
-            resp->setBody(data.dump());
-            cb(resp);
-        })
         .addListener("0.0.0.0", 9090)
         .run();
 }

@@ -263,6 +263,7 @@ bool CameraDevice::connect(SCRSDK::CrSdkControlMode openMode, SCRSDK::CrReconnec
     }
 
     m_spontaneous_disconnection = false;
+    tout << "inputId=" << inputId << ", m_userPassword=" << m_userPassword << ", m_fingerprint=" << m_fingerprint << "\n";
     auto connect_status = SDK::Connect(m_info, this, &m_device_handle, openMode, reconnect, inputId, m_userPassword.c_str(), m_fingerprint.c_str(), (CrInt32u)m_fingerprint.size());
     if (CR_FAILED(connect_status)) {
         text id(this->get_id());
