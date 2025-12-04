@@ -15,8 +15,7 @@ add_executable(${digitalcamera}
     ${cli_hdrs}
     ${cli_srcs}
     ${crsdk_hdrs}
-    src/api
-    src/SonyCamera.cpp
+    src/camera/SonyCamera.cpp
     src/main.cpp
     src/test.cpp
 )
@@ -52,6 +51,7 @@ target_include_directories(${digitalcamera}
         ${obsbot_dir}/include
         ${third_dir}/nlohmann
         src/api
+        src/camera
 )
 
 ### Link CRSDK library

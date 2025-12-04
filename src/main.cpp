@@ -13,6 +13,7 @@
 #include <drogon/drogon.h>
 #include "DocController.h"
 #include "UserController.h"
+#include "CameraController.h"
 #include "json.hpp"
 
 using namespace std;
@@ -49,6 +50,7 @@ int main() {
     cli::tout.imbue(std::locale());
     
     drogon::app().registerController(std::make_shared<UserController>());
+    drogon::app().registerController(std::make_shared<CameraController>());
     // 注册文档控制器
     drogon::app().registerController(std::make_shared<DocController>());
     drogon::app()
@@ -63,14 +65,6 @@ int main() {
             auto resp = drogon::HttpResponse::newHttpResponse();
             std::string version = camera.version();
             resp->setBody(version.c_str());
-            cb(resp);
-        })
-        .registerHandler("/device/scan", [](const drogon::HttpRequestPtr&,
-                    std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
-            std::string devList = camera.scan();
-            auto resp = drogon::HttpResponse::newHttpResponse();
-            resp->setContentTypeString("application/json; charset=utf-8");
-            resp->setBody(devList);
             cb(resp);
         })
         .registerHandler("/device/connect", [](const drogon::HttpRequestPtr& req,

@@ -1,5 +1,4 @@
 #include "SonyCamera.h"
-#include "SonyCameraShutterWake.h"
 
 int SonyCamera::initialize()
 {
@@ -42,7 +41,7 @@ int SonyCamera::release() {
 
 SonyCamera::SonyCamera()
 {
-    initialize();
+    // initialize();
 }
 
 SonyCamera::~SonyCamera() {
@@ -62,22 +61,22 @@ std::string SonyCamera::version() {
     return j.dump();
 }
 
-std::string SonyCamera::scan() {
+Json::Value SonyCamera::scan() {
     if (!isInitialized) {
         initialize();
     }
-    
-    json ret = json::array();
+    Json::Value ret(Json::arrayValue);
+    // json ret = json::array();
     cli::tout << "Enumerate connected camera devices...\n";
     auto enum_status = SDK::EnumCameraObjects(&camera_list);
     if (CR_FAILED(enum_status) || camera_list == nullptr) {
         cli::tout << "No cameras detected. Connect a camera and retry.\n";
         release();
-        return ret.dump();
+        return ret;
     }
     auto ncams = camera_list->GetCount();
     cli::tout << "Camera enumeration successful. " << ncams << " detected.\n\n";
-    json dev;
+    Json::Value dev;
     for (CrInt32u i = 0; i < ncams; ++i) {
         auto camera_info = camera_list->GetCameraObjectInfo(i);
         cli::text conn_type(camera_info->GetConnectionTypeName());
@@ -95,9 +94,9 @@ std::string SonyCamera::scan() {
         dev["name"] = model.data();
         dev["id"] = id.data();
         dev["is_wifi"] = isWifi;
-        ret.push_back(dev);
+        ret.append(dev);
     }
-    return ret.dump();
+    return ret;
 }
 
 bool SonyCamera::connect(int index) {

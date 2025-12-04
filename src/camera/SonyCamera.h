@@ -22,6 +22,7 @@ namespace fs = std::filesystem;
 #include "CRSDK/CameraRemote_SDK.h"
 #include "CameraDevice.h"
 #include "Text.h"
+#include <json/json.h>
 #include "json.hpp"
 using json = nlohmann::json;
 
@@ -45,7 +46,7 @@ class SonyCamera {
         SonyCamera();
         ~SonyCamera();
         std::string version();
-        std::string scan();
+        Json::Value scan();
         bool connect(int index);
         bool connect_with_usb();
         bool af_shutter(std::function<void (std::string)>* cb);

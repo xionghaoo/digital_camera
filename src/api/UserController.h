@@ -4,15 +4,13 @@
 #include <drogon/HttpResponse.h>
 #include <drogon/HttpRequest.h>
 #include <json/json.h>
+#include "BaseController.h"
 #include "DocController.h"
 #include "AutoDocMacro.h"
 #include <string>
 #include <map>
 #include <mutex>
-#include <chrono>
-#include <iomanip>
-#include <sstream>
-#include <ctime>
+#include <vector>
 
 using namespace drogon;
 
@@ -20,7 +18,7 @@ using namespace drogon;
  * 用户控制器
  * 提供完整的用户 CRUD 操作
  */
-class UserController : public HttpController<UserController>
+class UserController : public HttpController<UserController>, public BaseController
 {
 public:
     // 禁用自动创建，允许手动注册
@@ -61,71 +59,39 @@ public:
     // GET /api/user/{id} - 获取用户信息
     void getUser(const HttpRequestPtr& req,
                  std::function<void(const HttpResponsePtr&)>&& callback,
-                 int id)
+                 const std::string& idStr)
     {
+        // 将路径参数转换为整数
+        int id = 0;
+        try {
+            id = std::stoi(idStr);
+        } catch (const std::exception& e) {
+            sendErrorResponse(std::move(callback), 400, "用户ID格式错误", k400BadRequest);
+            return;
+        }
+        
         std::lock_guard<std::mutex> lock(usersMutex_);
         
         auto it = users_.find(id);
         if (it == users_.end()) {
-            Json::Value ret;
-            ret["code"] = 404;
-            ret["message"] = "用户不存在";
-            auto resp = HttpResponse::newHttpJsonResponse(ret);
-            resp->setStatusCode(k404NotFound);
-            callback(resp);
+            sendErrorResponse(std::move(callback), 404, "用户不存在", k404NotFound);
             return;
         }
         
         const User& user = it->second;
-        Json::Value ret;
-        ret["code"] = 0;
-        ret["message"] = "成功";
-        ret["data"]["id"] = user.id;
-        ret["data"]["name"] = user.name;
-        ret["data"]["email"] = user.email;
-        ret["data"]["phone"] = user.phone;
-        ret["data"]["age"] = user.age;
-        ret["data"]["createdAt"] = user.createdAt;
-        
-        auto resp = HttpResponse::newHttpJsonResponse(ret);
-        callback(resp);
+        sendSuccessResponse(std::move(callback), "成功", userToJson(user));
     }
 
     // GET /api/user - 获取用户列表
     void getUserList(const HttpRequestPtr& req,
                      std::function<void(const HttpResponsePtr&)>&& callback)
     {
-        // 获取查询参数
-        std::string page = "1";
-        std::string pageSize = "10";
-        std::string keyword = "";
-        
-        try {
-            const auto& params = req->getParameters();
-            auto it = params.find("page");
-            if (it != params.end()) {
-                page = it->second;
-            }
-            it = params.find("pageSize");
-            if (it != params.end()) {
-                pageSize = it->second;
-            }
-            it = params.find("keyword");
-            if (it != params.end()) {
-                keyword = it->second;
-            }
-        } catch (...) {
-            // 使用默认值
-        }
-        
-        int pageNum = std::stoi(page);
-        int pageSizeNum = std::stoi(pageSize);
+        // 获取查询参数（使用基类的便利方法）
+        int pageNum = getQueryParamAsInt(req, "page", 1);
+        int pageSizeNum = getQueryParamAsInt(req, "pageSize", 10);
+        std::string keyword = getQueryParam(req, "keyword", "");
         
         std::lock_guard<std::mutex> lock(usersMutex_);
-        
-        Json::Value ret;
-        ret["code"] = 0;
-        ret["message"] = "成功";
         
         Json::Value data;
         Json::Value users(Json::arrayValue);
@@ -148,54 +114,35 @@ public:
             total++;
             
             if (count >= start && count < start + pageSizeNum) {
-                Json::Value userJson;
-                userJson["id"] = user.id;
-                userJson["name"] = user.name;
-                userJson["email"] = user.email;
-                userJson["phone"] = user.phone;
-                userJson["age"] = user.age;
-                userJson["createdAt"] = user.createdAt;
-                users.append(userJson);
+                users.append(userToJson(user));
             }
             
             count++;
         }
         
-        data["users"] = users;
-        data["total"] = total;
-        data["page"] = pageNum;
-        data["pageSize"] = pageSizeNum;
-        data["totalPages"] = (total + pageSizeNum - 1) / pageSizeNum;
-        
-        ret["data"] = data;
-        
-        auto resp = HttpResponse::newHttpJsonResponse(ret);
-        callback(resp);
+        // 使用基类的分页响应方法（保持原有的 users 字段名）
+        sendPaginatedResponse(std::move(callback), users, total, pageNum, pageSizeNum, "成功", "users");
     }
 
     // POST /api/user - 创建用户
     void createUser(const HttpRequestPtr& req,
                     std::function<void(const HttpResponsePtr&)>&& callback)
     {
-        auto json = req->getJsonObject();
+        // 使用基类的验证方法
+        const Json::Value* json = validateJsonRequest(req);
         if (!json) {
-            Json::Value ret;
-            ret["code"] = 400;
-            ret["message"] = "请求体格式错误";
-            auto resp = HttpResponse::newHttpJsonResponse(ret);
-            resp->setStatusCode(k400BadRequest);
-            callback(resp);
+            sendErrorResponse(std::move(callback), 400, "请求体格式错误，需要JSON格式", k400BadRequest);
             return;
         }
         
         // 验证必填字段
-        if (!json->isMember("name") || !json->isMember("email")) {
-            Json::Value ret;
-            ret["code"] = 400;
-            ret["message"] = "缺少必填字段：name 或 email";
-            auto resp = HttpResponse::newHttpJsonResponse(ret);
-            resp->setStatusCode(k400BadRequest);
-            callback(resp);
+        std::vector<std::string> missingFields = validateRequiredFields(json, {"name", "email"});
+        if (!missingFields.empty()) {
+            std::string message = "缺少必填字段: " + missingFields[0];
+            for (size_t i = 1; i < missingFields.size(); ++i) {
+                message += ", " + missingFields[i];
+            }
+            sendErrorResponse(std::move(callback), 400, message, k400BadRequest);
             return;
         }
         
@@ -205,12 +152,7 @@ public:
         std::string email = (*json)["email"].asString();
         for (const auto& pair : users_) {
             if (pair.second.email == email) {
-                Json::Value ret;
-                ret["code"] = 409;
-                ret["message"] = "邮箱已存在";
-                auto resp = HttpResponse::newHttpJsonResponse(ret);
-                resp->setStatusCode(k409Conflict);
-                callback(resp);
+                sendErrorResponse(std::move(callback), 409, "邮箱已存在", k409Conflict);
                 return;
             }
         }
@@ -226,31 +168,32 @@ public:
         
         users_[newUser.id] = newUser;
         
-        Json::Value ret;
-        ret["code"] = 0;
-        ret["message"] = "创建成功";
-        ret["data"]["id"] = newUser.id;
-        ret["data"]["name"] = newUser.name;
-        ret["data"]["email"] = newUser.email;
+        Json::Value data;
+        data["id"] = newUser.id;
+        data["name"] = newUser.name;
+        data["email"] = newUser.email;
         
-        auto resp = HttpResponse::newHttpJsonResponse(ret);
-        resp->setStatusCode(k201Created);
-        callback(resp);
+        sendSuccessResponse(std::move(callback), "创建成功", data, k201Created);
     }
 
     // PUT /api/user/{id} - 更新用户
     void updateUser(const HttpRequestPtr& req,
                     std::function<void(const HttpResponsePtr&)>&& callback,
-                    int id)
+                    const std::string& idStr)
     {
-        auto json = req->getJsonObject();
+        // 将路径参数转换为整数
+        int id = 0;
+        try {
+            id = std::stoi(idStr);
+        } catch (const std::exception& e) {
+            sendErrorResponse(std::move(callback), 400, "用户ID格式错误", k400BadRequest);
+            return;
+        }
+        
+        // 使用基类的验证方法
+        const Json::Value* json = validateJsonRequest(req);
         if (!json) {
-            Json::Value ret;
-            ret["code"] = 400;
-            ret["message"] = "请求体格式错误";
-            auto resp = HttpResponse::newHttpJsonResponse(ret);
-            resp->setStatusCode(k400BadRequest);
-            callback(resp);
+            sendErrorResponse(std::move(callback), 400, "请求体格式错误，需要JSON格式", k400BadRequest);
             return;
         }
         
@@ -258,12 +201,7 @@ public:
         
         auto it = users_.find(id);
         if (it == users_.end()) {
-            Json::Value ret;
-            ret["code"] = 404;
-            ret["message"] = "用户不存在";
-            auto resp = HttpResponse::newHttpJsonResponse(ret);
-            resp->setStatusCode(k404NotFound);
-            callback(resp);
+            sendErrorResponse(std::move(callback), 404, "用户不存在", k404NotFound);
             return;
         }
         
@@ -278,12 +216,7 @@ public:
             // 检查邮箱是否被其他用户使用
             for (const auto& pair : users_) {
                 if (pair.first != id && pair.second.email == newEmail) {
-                    Json::Value ret;
-                    ret["code"] = 409;
-                    ret["message"] = "邮箱已被其他用户使用";
-                    auto resp = HttpResponse::newHttpJsonResponse(ret);
-                    resp->setStatusCode(k409Conflict);
-                    callback(resp);
+                    sendErrorResponse(std::move(callback), 409, "邮箱已被其他用户使用", k409Conflict);
                     return;
                 }
             }
@@ -296,76 +229,47 @@ public:
             user.age = (*json)["age"].asInt();
         }
         
-        Json::Value ret;
-        ret["code"] = 0;
-        ret["message"] = "更新成功";
-        ret["data"]["id"] = user.id;
-        ret["data"]["name"] = user.name;
-        ret["data"]["email"] = user.email;
-        ret["data"]["phone"] = user.phone;
-        ret["data"]["age"] = user.age;
-        
-        auto resp = HttpResponse::newHttpJsonResponse(ret);
-        callback(resp);
+        sendSuccessResponse(std::move(callback), "更新成功", userToJson(user));
     }
 
     // DELETE /api/user/{id} - 删除用户
     void deleteUser(const HttpRequestPtr& req,
                     std::function<void(const HttpResponsePtr&)>&& callback,
-                    int id)
+                    const std::string& idStr)
     {
+        // 将路径参数转换为整数
+        int id = 0;
+        try {
+            id = std::stoi(idStr);
+        } catch (const std::exception& e) {
+            sendErrorResponse(std::move(callback), 400, "用户ID格式错误", k400BadRequest);
+            return;
+        }
+        
         std::lock_guard<std::mutex> lock(usersMutex_);
         
         auto it = users_.find(id);
         if (it == users_.end()) {
-            Json::Value ret;
-            ret["code"] = 404;
-            ret["message"] = "用户不存在";
-            auto resp = HttpResponse::newHttpJsonResponse(ret);
-            resp->setStatusCode(k404NotFound);
-            callback(resp);
+            sendErrorResponse(std::move(callback), 404, "用户不存在", k404NotFound);
             return;
         }
         
         users_.erase(it);
         
-        Json::Value ret;
-        ret["code"] = 0;
-        ret["message"] = "删除成功";
-        
-        auto resp = HttpResponse::newHttpJsonResponse(ret);
-        callback(resp);
+        sendSuccessResponse(std::move(callback), "删除成功");
     }
 
     // GET /api/user/search - 搜索用户
     void searchUser(const HttpRequestPtr& req,
                     std::function<void(const HttpResponsePtr&)>&& callback)
     {
-        std::string keyword = "";
-        try {
-            const auto& params = req->getParameters();
-            auto it = params.find("q");
-            if (it != params.end()) {
-                keyword = it->second;
-            }
-        } catch (...) {
-            // 使用默认值
-        }
+        std::string keyword = getQueryParam(req, "q", "");
         if (keyword.empty()) {
-            Json::Value ret;
-            ret["code"] = 400;
-            ret["message"] = "缺少搜索关键词参数 q";
-            auto resp = HttpResponse::newHttpJsonResponse(ret);
-            resp->setStatusCode(k400BadRequest);
-            callback(resp);
+            sendErrorResponse(std::move(callback), 400, "缺少搜索关键词参数 q", k400BadRequest);
             return;
         }
         
         std::lock_guard<std::mutex> lock(usersMutex_);
-        
-        Json::Value ret;
-        ret["code"] = 0;
-        ret["message"] = "成功";
         
         Json::Value users(Json::arrayValue);
         
@@ -376,29 +280,37 @@ public:
             if (user.name.find(keyword) != std::string::npos ||
                 user.email.find(keyword) != std::string::npos ||
                 user.phone.find(keyword) != std::string::npos) {
-                
-                Json::Value userJson;
-                userJson["id"] = user.id;
-                userJson["name"] = user.name;
-                userJson["email"] = user.email;
-                userJson["phone"] = user.phone;
-                userJson["age"] = user.age;
-                users.append(userJson);
+                users.append(userToJson(user));
             }
         }
         
-        ret["data"]["users"] = users;
-        ret["data"]["count"] = static_cast<int>(users.size());
-        ret["data"]["keyword"] = keyword;
+        Json::Value data;
+        data["users"] = users;
+        data["count"] = static_cast<int>(users.size());
+        data["keyword"] = keyword;
         
-        auto resp = HttpResponse::newHttpJsonResponse(ret);
-        callback(resp);
+        sendSuccessResponse(std::move(callback), "成功", data);
     }
 
 private:
     std::map<int, User> users_;
     std::mutex usersMutex_;
     int nextUserId_ = 1;
+    
+    /**
+     * 将User对象转换为Json::Value
+     */
+    Json::Value userToJson(const User& user) const
+    {
+        Json::Value json;
+        json["id"] = user.id;
+        json["name"] = user.name;
+        json["email"] = user.email;
+        json["phone"] = user.phone;
+        json["age"] = user.age;
+        json["createdAt"] = user.createdAt;
+        return json;
+    }
     
     void initSampleData()
     {
@@ -439,14 +351,5 @@ private:
         return nextUserId_++;
     }
     
-    std::string getCurrentTime()
-    {
-        auto now = std::chrono::system_clock::now();
-        auto time = std::chrono::system_clock::to_time_t(now);
-        std::tm* tm = std::localtime(&time);
-        std::stringstream ss;
-        ss << std::put_time(tm, "%Y-%m-%d %H:%M:%S");
-        return ss.str();
-    }
 };
 
