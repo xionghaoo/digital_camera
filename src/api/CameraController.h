@@ -22,16 +22,19 @@ public:
     static constexpr bool isAutoCreation = false;
     METHOD_LIST_BEGIN
         // 使用宏自动注册到文档
-        ADD_METHOD_WITH_AUTO_DOC(CameraController, scan, "/api/camera/scan", Post,
-                           "相机设备扫描", "扫描wifi/usb相机设备");
+        ADD_METHOD_WITH_BODY_PARAMS(CameraController, scan, "/api/camera/scan", Post,
+                           "相机设备扫描", "扫描wifi/usb相机设备",
+                           "device_type:string:相机类型：sony|obsbot");
         ADD_METHOD_WITH_AUTO_DOC(CameraController, connect, "/api/camera/connect/{index}", Post,
                            "相机连接", "通过序号连接相机设备，需要先扫描相机");
         ADD_METHOD_WITH_AUTO_DOC(CameraController, usbConnect, "/api/camera/connect/usb", Post,
                            "相机USB连接", "通过USB接口连接相机");
-        ADD_METHOD_WITH_AUTO_DOC(CameraController, power, "/api/camera/power", Post,
-                           "相机电源控制", "控制相机开关机，目前只有关机可用");
-        ADD_METHOD_WITH_AUTO_DOC(CameraController, afShutter, "/api/camera/shutter/af", Post,
-                           "af拍摄", "af拍照，直接返回图片");    
+        ADD_METHOD_WITH_BODY_PARAMS(CameraController, power, "/api/camera/power", Post,
+                           "相机电源控制", "控制相机开关机，目前只有关机可用",
+                           "power_on:bool:是否开机：true|false");
+        ADD_METHOD_WITH_FILE_RESPONSE(CameraController, afShutter, "/api/camera/shutter/af", Post,
+                           "af拍摄", "af拍照，直接返回图片",
+                           "image/jpeg");    
     METHOD_LIST_END
 
     CameraController() {};

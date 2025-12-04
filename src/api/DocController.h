@@ -61,11 +61,12 @@ public:
         int statusCode;              // 状态码: 200, 400, 404 等
         std::string description;     // 响应描述
         Json::Value schema;          // 响应 Schema
+        std::string contentType;     // 内容类型: "application/json", "application/octet-stream", "image/jpeg" 等
         std::map<std::string, std::string> examples;  // 示例
         
-        ResponseInfo() : statusCode(200) {}
-        ResponseInfo(int code, const std::string& desc)
-            : statusCode(code), description(desc) {}
+        ResponseInfo() : statusCode(200), contentType("application/json") {}
+        ResponseInfo(int code, const std::string& desc, const std::string& type = "application/json")
+            : statusCode(code), description(desc), contentType(type) {}
     };
     
     // 路由注册表（用于存储路由信息）
@@ -873,13 +874,25 @@ public:
     // 便捷方法：创建响应信息
     static ResponseInfo createResponse(int statusCode,
                                       const std::string& description,
-                                      const Json::Value& schema = Json::Value())
+                                      const Json::Value& schema = Json::Value(),
+                                      const std::string& contentType = "application/json")
     {
         ResponseInfo resp;
         resp.statusCode = statusCode;
         resp.description = description;
         resp.schema = schema;
+        resp.contentType = contentType;
         return resp;
+    }
+    
+    // 便捷方法：创建文件响应信息
+    static ResponseInfo createFileResponse(const std::string& description = "文件下载",
+                                           const std::string& contentType = "application/octet-stream")
+    {
+        Json::Value schema;
+        schema["type"] = "string";
+        schema["format"] = "binary";
+        return createResponse(200, description, schema, contentType);
     }
     
     // 将 ParameterInfo 转换为 OpenAPI 参数格式
@@ -1107,6 +1120,29 @@ public:
                             jsonContent["examples"] = examples;
                         }
                         
+                        content[resp.contentType] = jsonContent;
+                        responseJson["content"] = content;
+                    } else if (resp.statusCode != 204) {
+                        // 如果 schema 为空且不是 204，提供默认的 JSON schema
+                        Json::Value content;
+                        Json::Value jsonContent;
+                        Json::Value schema;
+                        schema["type"] = "object";
+                        schema["properties"]["code"]["type"] = "integer";
+                        schema["properties"]["message"]["type"] = "string";
+                        schema["properties"]["data"]["nullable"] = true;
+                        
+                        // 根据状态码设置示例值
+                        if (resp.statusCode >= 200 && resp.statusCode < 300) {
+                            schema["properties"]["code"]["example"] = 0;
+                            schema["properties"]["message"]["example"] = "success";
+                            // data 可以是 null 或 object，这里不强制
+                        } else {
+                            schema["properties"]["code"]["example"] = resp.statusCode;
+                            schema["properties"]["message"]["example"] = resp.description;
+                        }
+                        
+                        jsonContent["schema"] = schema;
                         content["application/json"] = jsonContent;
                         responseJson["content"] = content;
                     }

@@ -33,13 +33,15 @@ public:
         ADD_METHOD_WITH_PAGINATION(UserController, getUserList, "/api/user", Get,
                                    "获取用户列表", "获取所有用户列表，支持分页和搜索");
         
-        // POST 请求自动文档（自动添加请求体 Schema）
-        ADD_METHOD_WITH_AUTO_DOC(UserController, createUser, "/api/user", Post,
-                                 "创建用户", "创建新用户，需要提供姓名、邮箱等信息");
+        // POST 请求自动文档（带请求体参数）
+        ADD_METHOD_WITH_BODY_PARAMS(UserController, createUser, "/api/user", Post,
+                                 "创建用户", "创建新用户，需要提供姓名、邮箱等信息",
+                                 "name:string:姓名,email:string:邮箱,phone:string:电话(可选),age:integer:年龄(可选)");
         
-        // PUT 请求自动文档（自动提取路径参数，添加请求体）
-        ADD_METHOD_WITH_AUTO_DOC(UserController, updateUser, "/api/user/{id}", Put,
-                                 "更新用户", "更新指定用户的信息");
+        // PUT 请求自动文档（带请求体参数）
+        ADD_METHOD_WITH_BODY_PARAMS(UserController, updateUser, "/api/user/{id}", Put,
+                                 "更新用户", "更新指定用户的信息",
+                                 "name:string:姓名,email:string:邮箱,phone:string:电话,age:integer:年龄");
         
         // DELETE 请求自动文档
         ADD_METHOD_WITH_AUTO_DOC(UserController, deleteUser, "/api/user/{id}", Delete,
