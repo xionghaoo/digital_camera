@@ -54,5 +54,5 @@ class SonyCamera {
         void power_off();
         void power_on();
         void live_view();
-        void enable_live_view(bool enable);
+        bool enable_live_view(bool enable, bool isLocal, std::string& rtmpUrl);
 };

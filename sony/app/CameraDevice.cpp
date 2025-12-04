@@ -45,12 +45,9 @@ namespace fs = std::filesystem;
 #else
 #include <conio.h>
 #endif
-#ifdef _USE_RTSP_
-#include "FFmpegStreamer.h"
-#else
-#include "MjpegHttpServer.h"
-#endif
 
+#include "FFmpegStreamer.h"
+#include "MjpegHttpServer.h"
 
 // Enumerator
 enum Password_Key {
@@ -87,11 +84,8 @@ using namespace std::chrono_literals;
 
 constexpr int const ImageSaveAutoStartNo = -1;
 
-#ifdef _USE_RTSP_
 FFmpegStreamer server;
-#else
-MjpegHttpServer server;
-#endif
+MjpegHttpServer serverLocal;
 
 namespace cli
 {
@@ -148,18 +142,26 @@ void CameraDevice::setCompeletedCallback(std::function<void (std::string)>* cb) 
     this->onCaptureCompleted = cb;
 }
 
-void CameraDevice::enable_live_view(bool enable) {
+bool CameraDevice::enable_live_view(bool enable, bool isLocal, std::string& rtmpUrl) {
+    bool ret = false;
     if (enable) {
         tout << "启动推流\n";   
-#ifdef _USE_RTSP_
-        server.startRtmpStream("rtmp://120.25.49.109:21935/live/stream_5?sign=kjGKfDYESC", 25, 2000);
-#else
-        server.start(8081);
-#endif
+        if (isLocal) {
+            ret = serverLocal.start(8081);
+        } else {
+            ret = server.startRtmpStream(rtmpUrl, 25, 2000);
+            // server.startRtmpStream("rtmp://120.25.49.109:21935/live/stream_5?sign=kjGKfDYESC", 25, 2000);
+        }
     } else {
+        ret = true;
         tout << "停止推流\n";   
-        server.stop();
+        if (isLocal) {
+            serverLocal.stop();
+        } else {
+            server.stop();
+        }
     }
+    return ret;
 }
 
 bool CameraDevice::getfingerprint()

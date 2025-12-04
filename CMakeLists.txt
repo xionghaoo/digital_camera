@@ -15,6 +15,7 @@ add_executable(${digitalcamera}
     ${cli_hdrs}
     ${cli_srcs}
     ${crsdk_hdrs}
+    src/api
     src/SonyCamera.cpp
     src/main.cpp
     src/test.cpp
@@ -50,6 +51,7 @@ target_include_directories(${digitalcamera}
         ${ldir}/opencv/include
         ${obsbot_dir}/include
         ${third_dir}/nlohmann
+        src/api
 )
 
 ### Link CRSDK library
@@ -90,7 +92,8 @@ target_link_libraries(${digitalcamera} PRIVATE
     ${ldir}/opencv/Linux/libopencv_imgproc.so.408
 )
 
-
+## include drogon
+set(ENABLE_OPENAPI ON CACHE BOOL "Enable OpenAPI plugin" FORCE)
 add_subdirectory(third_party/drogon)
 target_link_libraries(${PROJECT_NAME} PRIVATE drogon)
 

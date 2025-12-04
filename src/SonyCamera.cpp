@@ -237,15 +237,14 @@ void SonyCamera::live_view() {
     });
 }
 
-void SonyCamera::enable_live_view(bool enable) {
+bool SonyCamera::enable_live_view(bool enable, bool isLocal, std::string& rtmpUrl) {
      if (camera == nullptr) {
         cli::tout << "camera not create\n";
-        return;
+        return false;
     }
     isLiveRunning = enable;
     if (!enable) {
         if (liveThread.joinable()) { liveThread.join(); }
     }
-    
-    camera->enable_live_view(enable);
+    return camera->enable_live_view(enable, isLocal, rtmpUrl);
 }

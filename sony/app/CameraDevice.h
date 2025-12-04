@@ -62,7 +62,7 @@ public:
     ~CameraDevice();
 
     void setCompeletedCallback(std::function<void (std::string)>* cb);
-    void enable_live_view(bool enable);
+    bool enable_live_view(bool enable, bool isLocal, std::string& rtmpUrl);
 
     // Get fingerprint
     bool getfingerprint();
@@ -354,6 +354,7 @@ private:
     std::mutex m_lockgetContentsData;
     CrInt32u m_getContentsData_notify;
     CrInt32u m_getContentsData_per;
+    bool isLocal = false;
 
 #if defined(_UNICODE) || defined(UNICODE)
     std::wstring m_getContentsData_fileName;
