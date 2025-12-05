@@ -2782,6 +2782,29 @@ void CameraDevice::zoom(int speed) {
     get_zoom_operation();
 }
 
+void CameraDevice::zoom_distance() {
+    // auto& values = m_prop.zoom_distance.possible;
+    load_properties();
+    auto current = m_prop.zoom_distance.current + 4000;
+    std::cout << "current: " << current << std::endl;
+
+    // CrDeviceProperty_Zoom_Type_Status
+    SDK::CrDeviceProperty prop;
+    prop.SetCode(SDK::CrDevicePropertyCode::CrDeviceProperty_Zoom_Type_Status);
+    prop.SetCurrentValue(SDK::CrZoomTypeStatus::CrZoomTypeStatus_DigitalZoom);
+    prop.SetValueType(SDK::CrDataType::CrDataType_UInt8Array);
+    SDK::SetDeviceProperty(m_device_handle, &prop);
+    
+    load_properties();
+    
+    // SDK::CrDeviceProperty prop;
+    prop.SetCode(SDK::CrDevicePropertyCode::CrDeviceProperty_DigitalZoomScale);
+    prop.SetCurrentValue((CrInt64u)0x000004B0);
+    prop.SetValueType(SDK::CrDataType::CrDataType_UInt32Range);
+    SDK::SetDeviceProperty(m_device_handle, &prop);
+    get_zoom_operation();
+}
+
 void CameraDevice::set_remocon_zoom_speed_type()
 {
     if (1 != m_prop.remocon_zoom_speed_type.writable) {

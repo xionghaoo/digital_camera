@@ -87,6 +87,7 @@ public:
     // Should be const functions, but requires load property, which is not
 
     void zoom(int type);
+    void zoom_distance();
 
     void get_aperture();
     void get_iso();

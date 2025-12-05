@@ -44,6 +44,8 @@ public:
         ADD_METHOD_WITH_BODY_PARAMS(CameraController, zoom, "/api/camera/zoom", Post,
                            "焦距控制", "调整相机焦距",
                            "zoom_speed:int:缩放值：-8~8");
+        ADD_METHOD_WITH_AUTO_DOC(CameraController, zoomDistance, "/api/camera/zoom/distance", Post,
+                           "焦距控制", "通过距离调整相机焦距");
     METHOD_LIST_END
 
     CameraController() {};
@@ -239,6 +241,18 @@ public:
         std::lock_guard<std::mutex> lock(cameraMutex_);
         int speed = (*json)["zoom_speed"].asInt();  
         bool ret = camera.zoom(speed);
+        if (ret) {
+            sendSuccessResponse(std::move(callback), "success", Json::nullValue, k200OK);
+        } else {
+            sendErrorResponse(std::move(callback), -1, "调焦失败", k200OK);
+        }
+    }
+
+    void zoomDistance(const HttpRequestPtr& req,
+                        std::function<void(const HttpResponsePtr&)>&& callback) 
+    {
+        std::lock_guard<std::mutex> lock(cameraMutex_);
+        bool ret = camera.zoom_distance(0);
         if (ret) {
             sendSuccessResponse(std::move(callback), "success", Json::nullValue, k200OK);
         } else {

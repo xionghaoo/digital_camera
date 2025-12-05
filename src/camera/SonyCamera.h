@@ -64,4 +64,5 @@ class SonyCamera {
         bool enable_live_view(bool enable, bool isLocal, std::string& rtmpUrl);
 
         bool zoom(int speed);
+        bool zoom_distance(int scale);
 };

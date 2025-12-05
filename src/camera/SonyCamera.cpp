@@ -267,6 +267,18 @@ bool SonyCamera::zoom(int speed)
         cli::tout << "camera not create\n";
         return false;
     }
+    // CrDeviceProperty_DigitalZoomScale
     camera->zoom(speed);
     return true;
+}
+
+bool SonyCamera::zoom_distance(int scale)
+{
+    if (camera == nullptr) {
+        cli::tout << "camera not create\n";
+        return false;
+    }
+    // CrDeviceProperty_DigitalZoomScale
+    camera->zoom_distance();
+    return false;
 }
