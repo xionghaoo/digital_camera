@@ -41,6 +41,9 @@ public:
                            "is_enable:bool:是否开启：true|false,is_local:bool:本地预览还是远程预览：true本地|false远程,rtmp_url:string:推流地址");    
         ADD_METHOD_WITH_AUTO_DOC(CameraController, liveStart, "/api/camera/live/start", Post,
                            "开启相机预览", "开启相机预览，需要先打开预览开关");
+        ADD_METHOD_WITH_BODY_PARAMS(CameraController, zoom, "/api/camera/zoom", Post,
+                           "焦距控制", "调整相机焦距",
+                           "zoom_speed:int:缩放值：-8~8");
     METHOD_LIST_END
 
     CameraController() {};
@@ -209,6 +212,37 @@ public:
             sendSuccessResponse(std::move(callback), "success", Json::nullValue, k200OK);
         } else {
             sendErrorResponse(std::move(callback), -1, "推流开启失败", k200OK);
+        }
+    }
+
+    void zoom(const HttpRequestPtr& req,
+                std::function<void(const HttpResponsePtr&)>&& callback) 
+    {
+        // 使用基类的验证方法
+        const Json::Value* json = validateJsonRequest(req);
+        if (!json) {
+            sendErrorResponse(std::move(callback), 400, "请求体格式错误，需要JSON格式", k400BadRequest);
+            return;
+        }
+        
+        // 验证必填字段
+        std::vector<std::string> missingFields = validateRequiredFields(json, {"zoom_speed"});
+        if (!missingFields.empty()) {
+            std::string message = "缺少必填字段: " + missingFields[0];
+            for (size_t i = 1; i < missingFields.size(); ++i) {
+                message += ", " + missingFields[i];
+            }
+            sendErrorResponse(std::move(callback), 400, message, k400BadRequest);
+            return;
+        }
+        
+        std::lock_guard<std::mutex> lock(cameraMutex_);
+        int speed = (*json)["zoom_speed"].asInt();  
+        bool ret = camera.zoom(speed);
+        if (ret) {
+            sendSuccessResponse(std::move(callback), "success", Json::nullValue, k200OK);
+        } else {
+            sendErrorResponse(std::move(callback), -1, "调焦失败", k200OK);
         }
     }
 

@@ -247,7 +247,7 @@ bool SonyCamera::live_view() {
 }
 
 bool SonyCamera::enable_live_view(bool enable, bool isLocal, std::string& rtmpUrl) {
-     if (camera == nullptr) {
+    if (camera == nullptr) {
         cli::tout << "camera not create\n";
         return false;
     }
@@ -259,4 +259,14 @@ bool SonyCamera::enable_live_view(bool enable, bool isLocal, std::string& rtmpUr
         liveType = isLocal ? LiveType::LOCAL : LiveType::REMOTE;
     }
     return camera->enable_live_view(enable, isLocal, rtmpUrl);
+}
+
+bool SonyCamera::zoom(int speed) 
+{
+    if (camera == nullptr) {
+        cli::tout << "camera not create\n";
+        return false;
+    }
+    camera->zoom(speed);
+    return true;
 }

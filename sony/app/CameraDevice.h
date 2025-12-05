@@ -86,6 +86,8 @@ public:
     /*** Property operations ***/
     // Should be const functions, but requires load property, which is not
 
+    void zoom(int type);
+
     void get_aperture();
     void get_iso();
     void get_shutter_speed();

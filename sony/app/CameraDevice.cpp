@@ -147,7 +147,7 @@ bool CameraDevice::enable_live_view(bool enable, bool isLocal, std::string& rtmp
     if (enable) {
         tout << "启动推流\n";   
         if (isLocal) {
-            ret = serverLocal.start(8081);
+            ret = serverLocal.start(9091);
         } else {
             ret = server.startRtmpStream(rtmpUrl, 25, 2000);
         }
@@ -2731,6 +2731,55 @@ void CameraDevice::set_zoom_operation()
         }
         get_zoom_operation();
     }
+}
+
+void CameraDevice::zoom(int speed) {
+    get_zoom_operation();
+    load_properties();
+    CrInt64 ptpValue = 0;
+    bool ret = true;
+    bool cancel = false;
+    if (m_prop.zoom_speed_range.possible.size() < 2) {
+        tout << std::endl << "camera not support range\n";
+        switch (speed)
+        {
+        case 0:
+            ptpValue = SDK::CrZoomOperation::CrZoomOperation_Stop;
+            break;
+        case 1:
+            ptpValue = SDK::CrZoomOperation::CrZoomOperation_Wide;
+            break;
+        case 2:
+            ptpValue = SDK::CrZoomOperation::CrZoomOperation_Tele;
+        default:
+            ret = false;
+            break;
+        }
+    } else {
+        // Set the value of zoom speed
+        load_properties();
+        if ((speed < (int)m_prop.zoom_speed_range.possible.at(0)) || ((int)m_prop.zoom_speed_range.possible.at(1) < speed)) {
+            cancel = true;
+            ptpValue = SDK::CrZoomOperation::CrZoomOperation_Stop;
+            tout << "Input cancelled.\n";
+        } else {
+            ptpValue = (CrInt64)speed;
+        }
+    }
+    if (SDK::CrZoomOperationEnableStatus::CrZoomOperationEnableStatus_Enable != m_prop.zoom_operation_status.current) {
+        std::cout << "Zoom Operation is not executable.\n";
+        return;
+    }
+    std::cout << "ptpValue=" << ptpValue << std::endl;
+    SDK::CrDeviceProperty prop;
+    prop.SetCode(SDK::CrDevicePropertyCode::CrDeviceProperty_Zoom_Operation);
+    prop.SetCurrentValue((CrInt64u)ptpValue);
+    prop.SetValueType(SDK::CrDataType::CrDataType_UInt16Array);
+    SDK::SetDeviceProperty(m_device_handle, &prop);
+    if (cancel == true) {
+        return;
+    }
+    get_zoom_operation();
 }
 
 void CameraDevice::set_remocon_zoom_speed_type()

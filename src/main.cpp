@@ -54,12 +54,6 @@ int main() {
     // 注册文档控制器
     drogon::app().registerController(std::make_shared<DocController>());
     drogon::app()
-        .registerHandler("/", [](const drogon::HttpRequestPtr&,
-                                    std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
-            auto resp = drogon::HttpResponse::newHttpResponse();
-            resp->setBody("Hello, Drogon");
-            cb(resp);
-        })
         .registerHandler("/version", [](const drogon::HttpRequestPtr&,
                                     std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
             auto resp = drogon::HttpResponse::newHttpResponse();
