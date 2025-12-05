@@ -95,8 +95,8 @@ public:
     void get_still_capture_mode();
     void get_focus_mode();
     void get_focus_area();
-    void get_live_view();
-    void get_live_view_only();
+    void get_live_view(bool isLocal);
+    void get_live_view_only(bool isLocal);
     void get_live_view_and_OSD();
     void get_live_view_image_quality();
     void get_af_area_position();

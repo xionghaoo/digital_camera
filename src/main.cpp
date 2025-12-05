@@ -67,14 +67,6 @@ int main() {
             resp->setBody(version.c_str());
             cb(resp);
         })
-        .registerHandler("/af-shutter", [](const drogon::HttpRequestPtr& req,
-                    std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
-            std::function<void (std::string)> callback = [&](std::string path) {
-                auto resp = drogon::HttpResponse::newFileResponse(path.c_str());
-                cb(resp);
-            };
-            bool success = camera.af_shutter(&callback);
-        })
         .registerHandler("/capture", [](const drogon::HttpRequestPtr& req,
                     std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
             auto resp = drogon::HttpResponse::newHttpResponse();
@@ -84,47 +76,6 @@ int main() {
             std::string path = camera.get_save_path();
             data["code"] = 0;
             data["data"] = path;
-            resp->setBody(data.dump());
-            cb(resp);
-        })
-        .registerHandler("/live/enable", [](const drogon::HttpRequestPtr& req,
-                    std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
-            bool isEnable = false;
-            bool isLocal = false;
-            std::string rtmpUrl("");
-            if (req->getContentType() == drogon::CT_APPLICATION_JSON) {
-                auto jsonPtr = req->getJsonObject();
-                isEnable = jsonPtr->get("is_enable", false).asBool();
-                isLocal = jsonPtr->get("is_local", false).asBool();
-                rtmpUrl = jsonPtr->get("rtmp_url", "").asString();
-            }
-            drogon::HttpResponsePtr respPtr;
-            if (!isLocal) {
-                // 推流
-                if (rtmpUrl.size() == 0) {
-                    std::string msg("rtmp url not set");
-                    respPtr = response_json(-1, nullptr, msg);
-                    cb(respPtr);
-                    return;
-                }
-            }
-            // 局域网
-            bool success = camera.enable_live_view(isEnable, isLocal, rtmpUrl);    
-            std::string msg(success ? "success" : "failure");
-            int code = success ? 0 : -1;
-            std::string url = isLocal ? ":8081" : rtmpUrl;
-            json data = success ? url : nullptr;
-            respPtr = response_json(code, data, msg);
-            cb(respPtr);
-        })
-        .registerHandler("/live/start", [](const drogon::HttpRequestPtr& req,
-                    std::function<void(const drogon::HttpResponsePtr&)>&& cb) {
-            auto resp = drogon::HttpResponse::newHttpResponse();
-            resp->setContentTypeString("application/json; charset=utf-8");
-            json data;
-            camera.live_view();
-            data["code"] = 0;
-            data["data"] = nullptr;
             resp->setBody(data.dump());
             cb(resp);
         })

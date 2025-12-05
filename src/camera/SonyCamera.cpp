@@ -223,7 +223,7 @@ void SonyCamera::power_on() {
     // std::cout << "Connected successfully" << std::endl;
 }
 
-void SonyCamera::live_view() {
+void SonyCamera::live_view(bool isLocal) {
     if (camera == nullptr) {
         cli::tout << "camera not create\n";
         return;
@@ -232,7 +232,7 @@ void SonyCamera::live_view() {
     liveThread = std::thread([&]() {
         while (isLiveRunning) {
             camera->change_live_view_enable();     
-            camera->get_live_view_only();        
+            camera->get_live_view_only(isLocal);        
         }
         std::cout << "live view exited" << std::endl;
     });

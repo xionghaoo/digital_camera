@@ -1083,7 +1083,7 @@ int a_main()
                         std::getline(cli::tin, select);
                         cli::tout << '\n';
                         if (select == TEXT("1")) { /* Live View */
-                            camera->get_live_view();
+                            camera->get_live_view(true);
                         }
                         else if (select == TEXT("2")) { /* Live View Image Quality */
                             camera->get_live_view_image_quality();

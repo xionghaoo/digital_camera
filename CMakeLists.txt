@@ -52,6 +52,7 @@ target_include_directories(${digitalcamera}
         ${third_dir}/nlohmann
         src/api
         src/camera
+        src/utils
 )
 
 ### Link CRSDK library

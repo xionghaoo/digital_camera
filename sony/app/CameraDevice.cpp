@@ -150,7 +150,6 @@ bool CameraDevice::enable_live_view(bool enable, bool isLocal, std::string& rtmp
             ret = serverLocal.start(9091);
         } else {
             ret = server.startRtmpStream(rtmpUrl, 25, 2000);
-            // server.startRtmpStream("rtmp://120.25.49.109:21935/live/stream_5?sign=kjGKfDYESC", 25, 2000);
         }
     } else {
         ret = true;
@@ -515,7 +514,7 @@ void CameraDevice::get_focus_area()
     tout << "Focus Area: " << format_focus_area(m_prop.focus_area.current) << '\n';
 }
 
-void CameraDevice::get_live_view_only()
+void CameraDevice::get_live_view_only(bool isLocal)
 {
     tout << "GetLiveView...\n";
 
@@ -621,7 +620,11 @@ void CameraDevice::get_live_view_only()
     //     file.write((char*)image_data->GetImageData(), image_data->GetImageSize());
     //     file.close();
     // }
-    server.pushFrame((char*)image_data->GetImageData(), image_data->GetImageSize());
+    if (isLocal) {
+        serverLocal.pushFrame((char*)image_data->GetImageData(), image_data->GetImageSize());
+    } else {
+        server.pushFrame((char*)image_data->GetImageData(), image_data->GetImageSize());
+    }
     tout << "GetLiveView SUCCESS\n";
     delete[] image_buff; // Release
     delete image_data; // Release
@@ -915,7 +918,7 @@ void CameraDevice::get_live_view_and_OSD()
     delete[] image_buff; // Release
 }
 
-void CameraDevice::get_live_view()
+void CameraDevice::get_live_view(bool isLocal)
 {
     // check OSD gettable status
     std::int32_t nprop = 0;
@@ -932,7 +935,7 @@ void CameraDevice::get_live_view()
     }
 
     if (false == bSelected) {
-        get_live_view_only();
+        get_live_view_only(isLocal);
         return;
     }
 
@@ -953,7 +956,7 @@ void CameraDevice::get_live_view()
     ss >> selected_index;
 
     if (LiveViewOnly == selected_index) {
-        get_live_view_only();
+        get_live_view_only(isLocal);
     }
     else if (LiveViewAndOSD == selected_index) {
         get_live_view_and_OSD();
