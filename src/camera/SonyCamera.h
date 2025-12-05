@@ -32,6 +32,10 @@ typedef std::vector<CameraDevicePtr> CameraDeviceList;
 
 static std::atomic<bool> isLiveRunning{false};
 
+enum LiveType {
+    NONE, REMOTE, LOCAL
+};
+
 class SonyCamera {
     private:
         int initialize();
@@ -43,6 +47,8 @@ class SonyCamera {
     public:
         std::thread liveThread;
         SDK::ICrEnumCameraObjectInfo* camera_list = nullptr;
+        LiveType liveType = LiveType::NONE;
+
         SonyCamera();
         ~SonyCamera();
         std::string version();
@@ -54,6 +60,6 @@ class SonyCamera {
         std::string get_save_path();
         void power_off();
         void power_on();
-        void live_view(bool isLocal);
+        bool live_view();
         bool enable_live_view(bool enable, bool isLocal, std::string& rtmpUrl);
 };

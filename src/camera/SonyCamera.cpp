@@ -46,6 +46,7 @@ SonyCamera::SonyCamera()
 
 SonyCamera::~SonyCamera() {
     // Release the camera
+    liveType = LiveType::NONE;
 }
 
 std::string SonyCamera::version() {
@@ -223,19 +224,26 @@ void SonyCamera::power_on() {
     // std::cout << "Connected successfully" << std::endl;
 }
 
-void SonyCamera::live_view(bool isLocal) {
+bool SonyCamera::live_view() {
     if (camera == nullptr) {
         cli::tout << "camera not create\n";
-        return;
+        return false;
     }
-    std::cout << "live view" << std::endl;
+    if (liveType == LiveType::NONE) {
+        cli::tout << "live type not set\n";
+        return false;
+    }
+    
+    std::cout << "live view: " << liveType << std::endl;
     liveThread = std::thread([&]() {
         while (isLiveRunning) {
             camera->change_live_view_enable();     
+            bool isLocal = liveType == LiveType::LOCAL;
             camera->get_live_view_only(isLocal);        
         }
         std::cout << "live view exited" << std::endl;
     });
+    return true;
 }
 
 bool SonyCamera::enable_live_view(bool enable, bool isLocal, std::string& rtmpUrl) {
@@ -246,6 +254,9 @@ bool SonyCamera::enable_live_view(bool enable, bool isLocal, std::string& rtmpUr
     isLiveRunning = enable;
     if (!enable) {
         if (liveThread.joinable()) { liveThread.join(); }
+        liveType = LiveType::NONE;
+    } else {
+        liveType = isLocal ? LiveType::LOCAL : LiveType::REMOTE;
     }
     return camera->enable_live_view(enable, isLocal, rtmpUrl);
 }

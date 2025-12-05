@@ -39,9 +39,8 @@ public:
         ADD_METHOD_WITH_BODY_PARAMS(CameraController, liveEnable, "/api/camera/live/enable", Post,
                            "预览开关", "是否开启预览",
                            "is_enable:bool:是否开启：true|false,is_local:bool:本地预览还是远程预览：true本地|false远程,rtmp_url:string:推流地址");    
-        ADD_METHOD_WITH_BODY_PARAMS(CameraController, liveStart, "/api/camera/live/start", Post,
-                           "开启相机预览", "开启相机预览，需要先打开预览开关",
-                           "is_local:bool:本地预览还是远程预览：true本地|false远程");
+        ADD_METHOD_WITH_AUTO_DOC(CameraController, liveStart, "/api/camera/live/start", Post,
+                           "开启相机预览", "开启相机预览，需要先打开预览开关");
     METHOD_LIST_END
 
     CameraController() {};
@@ -204,27 +203,13 @@ public:
     void liveStart(const HttpRequestPtr& req,
                     std::function<void(const HttpResponsePtr&)>&& callback) 
     {
-        // 使用基类的验证方法
-        const Json::Value* json = validateJsonRequest(req);
-        if (!json) {
-            sendErrorResponse(std::move(callback), 400, "请求体格式错误，需要JSON格式", k400BadRequest);
-            return;
-        }
-        
-        // 验证必填字段
-        std::vector<std::string> missingFields = validateRequiredFields(json, {"is_local"});
-        if (!missingFields.empty()) {
-            std::string message = "缺少必填字段: " + missingFields[0];
-            for (size_t i = 1; i < missingFields.size(); ++i) {
-                message += ", " + missingFields[i];
-            }
-            sendErrorResponse(std::move(callback), 400, message, k400BadRequest);
-            return;
-        }
         std::lock_guard<std::mutex> lock(cameraMutex_);  
-        bool isLocal = (*json)["is_local"].asBool();
-        camera.live_view(isLocal);  
-        sendSuccessResponse(std::move(callback), "success", Json::nullValue, k200OK);
+        bool ret = camera.live_view();  
+        if (ret) {
+            sendSuccessResponse(std::move(callback), "success", Json::nullValue, k200OK);
+        } else {
+            sendErrorResponse(std::move(callback), -1, "推流开启失败", k200OK);
+        }
     }
 
 private:

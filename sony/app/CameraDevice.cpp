@@ -147,7 +147,7 @@ bool CameraDevice::enable_live_view(bool enable, bool isLocal, std::string& rtmp
     if (enable) {
         tout << "启动推流\n";   
         if (isLocal) {
-            ret = serverLocal.start(9091);
+            ret = serverLocal.start(8081);
         } else {
             ret = server.startRtmpStream(rtmpUrl, 25, 2000);
         }
@@ -625,7 +625,7 @@ void CameraDevice::get_live_view_only(bool isLocal)
     } else {
         server.pushFrame((char*)image_data->GetImageData(), image_data->GetImageSize());
     }
-    tout << "GetLiveView SUCCESS\n";
+    tout << "GetLiveView SUCCESS: isLocal=" << isLocal << "\n";
     delete[] image_buff; // Release
     delete image_data; // Release
 }

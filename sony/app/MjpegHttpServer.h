@@ -44,21 +44,22 @@ public:
     }
 
     void pushFrame(const char* jpegData, size_t size) {
-        char header[256];
-        int headerLen = snprintf(header, sizeof(header),
-            "\r\n--frame\r\n"
-            "Content-Type: image/jpeg\r\n"
-            "Content-Length: %zu\r\n\r\n", size);
+        std::string header = "--frame\r\n"
+                             "Content-Type: image/jpeg\r\n"
+                             "Content-Length: " + std::to_string(size) + "\r\n\r\n";
         
         std::lock_guard<std::mutex> lock(clientsMutex);
         for (auto it = clients.begin(); it != clients.end();) {
-            struct iovec iov[2];
-            iov[0].iov_base = header;
-            iov[0].iov_len = headerLen;
+            struct iovec iov[3];
+            iov[0].iov_base = (void*)header.data();
+            iov[0].iov_len = header.size();
             iov[1].iov_base = (void*)jpegData;
             iov[1].iov_len = size;
+            iov[2].iov_base = (void*)"\r\n";
+            iov[2].iov_len = 2;
             
-            if (writev(*it, iov, 2) <= 0) {
+            // 使用 writev 一次性发送头部、数据和尾部，减少分包风险
+            if (writev(*it, iov, 3) <= 0) {
                 close(*it);
                 it = clients.erase(it);
             } else {
@@ -120,8 +121,10 @@ private:
             const char* response = 
                 "HTTP/1.1 200 OK\r\n"
                 "Content-Type: multipart/x-mixed-replace; boundary=frame\r\n"
-                "Cache-Control: no-cache, no-store, must-revalidate\r\n"
-                "Connection: close\r\n\r\n";
+                "Cache-Control: no-store, no-cache, must-revalidate, pre-check=0, post-check=0, max-age=0\r\n"
+                "Pragma: no-cache\r\n"
+                "Connection: keep-alive\r\n"
+                "Access-Control-Allow-Origin: *\r\n\r\n";
             send(clientFd, response, strlen(response), 0);
             
             std::lock_guard<std::mutex> lock(clientsMutex);
