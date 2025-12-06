@@ -230,7 +230,7 @@ public:
         bool success = camera.enable_live_view(isEnable, isLocal, rtmpUrl);    
         std::string msg(success ? "success" : "failure");
         int code = success ? 0 : -1;
-        std::string url = isLocal ? "http://"+ localIP + ":9091" : rtmpUrl;
+        std::string url = isLocal ? "http://"+ localIP + ":9091" : "rtsp://120.25.49.109:15544/live/stream_5";
         sendSuccessResponse(std::move(callback), "success", url, k200OK);
     }
 
