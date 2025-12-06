@@ -35,6 +35,9 @@ static std::atomic<bool> isLiveRunning{false};
 enum LiveType {
     NONE, REMOTE, LOCAL
 };
+enum ZoomOperation {
+    WIDE, TELE, STOP
+};
 
 class SonyCamera {
     private:
@@ -63,6 +66,6 @@ class SonyCamera {
         bool live_view();
         bool enable_live_view(bool enable, bool isLocal, std::string& rtmpUrl);
 
-        bool zoom(int speed);
-        bool zoom_distance(int scale);
+        bool zoom(ZoomOperation operation);
+        bool zoom_fix(int scale);
 };

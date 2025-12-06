@@ -261,24 +261,38 @@ bool SonyCamera::enable_live_view(bool enable, bool isLocal, std::string& rtmpUr
     return camera->enable_live_view(enable, isLocal, rtmpUrl);
 }
 
-bool SonyCamera::zoom(int speed) 
+bool SonyCamera::zoom(ZoomOperation operation) 
 {
     if (camera == nullptr) {
         cli::tout << "camera not create\n";
         return false;
     }
-    // CrDeviceProperty_DigitalZoomScale
+    int speed = 0;
+    switch (operation)
+    {
+    case ZoomOperation::WIDE:
+        speed = 1;
+        break;
+    case ZoomOperation::TELE:
+        speed = -1;
+        break;
+    case ZoomOperation::STOP:
+        speed = 0;
+        break;
+    default:
+        break;
+    }
     camera->zoom(speed);
     return true;
 }
 
-bool SonyCamera::zoom_distance(int scale)
+bool SonyCamera::zoom_fix(int scale)
 {
     if (camera == nullptr) {
         cli::tout << "camera not create\n";
         return false;
     }
     // CrDeviceProperty_DigitalZoomScale
-    camera->zoom_distance();
-    return false;
+    camera->zoom_fix(scale);
+    return true;
 }

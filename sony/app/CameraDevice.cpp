@@ -2782,13 +2782,13 @@ void CameraDevice::zoom(int speed) {
     get_zoom_operation();
 }
 
-void CameraDevice::zoom_distance() {
+void CameraDevice::zoom_fix(int fixZoom) {
     // auto& values = m_prop.zoom_distance.possible;
     load_properties();
-    // 1000,1500,4000
+    // 1000,1500,2000
     SDK::CrDeviceProperty prop;
     prop.SetCode(SDK::CrDevicePropertyCode::CrDeviceProperty_Zoom_Scale);
-    prop.SetCurrentValue((CrInt64u)4000);
+    prop.SetCurrentValue((CrInt64u)fixZoom);
     prop.SetValueType(SDK::CrDataType::CrDataType_UInt32Range);
     SDK::SetDeviceProperty(m_device_handle, &prop);
     get_zoom_operation();
