@@ -21,7 +21,8 @@ using json = nlohmann::json;
 
 SonyCamera camera;
 
-drogon::HttpResponsePtr response_json(int code, json data, std::string& msg) {
+drogon::HttpResponsePtr response_json(int code, json data, std::string& msg) 
+{
     auto resp = drogon::HttpResponse::newHttpResponse();
     resp->setContentTypeString("application/json; charset=utf-8");
     json respData;
@@ -41,7 +42,8 @@ drogon::HttpResponsePtr response_json(int code, json data, std::string& msg) {
     return resp;
 }
 
-int main() {
+int main() 
+{
     // Change global locale to native locale
     std::locale::global(std::locale(""));
 

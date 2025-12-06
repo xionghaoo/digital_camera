@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <tuple>
 
 /**
  * 获取本机所有IPv4地址
@@ -60,16 +61,16 @@ std::map<std::string, std::string> getLocalIPs() {
  * 获取本机所有IPv4地址
  * @return map<网卡名, IP地址>
  */
-std::string getEth0IP() {
+std::tuple<std::string, std::string> getEthAndWifiIP() {
     struct ifaddrs * ifAddrStruct = nullptr;
     struct ifaddrs * ifa = nullptr;
     void * tmpAddrPtr = nullptr;
-
+    std::string eth0IP;
+    std::string wifiIP;
     // 获取接口列表
     if (getifaddrs(&ifAddrStruct) != 0) {
-        return ""; // 返回空或是抛出异常
+        return std::make_tuple(eth0IP, wifiIP); // 返回空或是抛出异常
     }
-    std::string retIP;
     // 遍历链表
     for (ifa = ifAddrStruct; ifa != nullptr; ifa = ifa->ifa_next) {
         if (!ifa->ifa_addr) {
@@ -89,7 +90,9 @@ std::string getEth0IP() {
             std::string ipAddress = addressBuffer;
 
             if (interfaceName == "enP8p1s0") {
-                retIP = ipAddress;
+                eth0IP = ipAddress;
+            } else if (interfaceName == "wlP1p1s0") {
+                wifiIP = ipAddress;
             }
         }
     }
@@ -99,5 +102,5 @@ std::string getEth0IP() {
         freeifaddrs(ifAddrStruct);
     }
     
-    return retIP;
+    return std::make_tuple(eth0IP, wifiIP);
 }

@@ -212,7 +212,8 @@ public:
         bool isEnable = (*json)["is_enable"].asBool();
         bool isLocal = (*json)["is_local"].asBool();
         std::string rtmpUrl = (*json)["rtmp_url"].asString();
-        std::string localIP;
+        std::string eth0IP;
+        std::string wifiIP;
         if (!isLocal) {
             // 推流
             if (rtmpUrl.size() == 0) {
@@ -220,8 +221,8 @@ public:
                 return;
             }
         } else {
-            localIP = getEth0IP();
-            if (localIP.size() == 0) {
+            std::tie(eth0IP, wifiIP) = getEthAndWifiIP();
+            if (eth0IP.size() == 0) {
                 sendErrorResponse(std::move(callback), -1, "wlan网口未连接", k200OK);
                 return;
             }
@@ -230,8 +231,15 @@ public:
         bool success = camera.enable_live_view(isEnable, isLocal, rtmpUrl);    
         std::string msg(success ? "success" : "failure");
         int code = success ? 0 : -1;
-        std::string url = isLocal ? "http://"+ localIP + ":9091" : "rtsp://120.25.49.109:15544/live/stream_5";
-        sendSuccessResponse(std::move(callback), "success", url, k200OK);
+        // std::string url = isLocal ? "http://"+ localIP + ":9091" : "rtsp://120.25.49.109:15544/live/stream_5";
+        Json::Value data;
+        if (isLocal) {
+            data["local_eth_url"] = "http://"+ eth0IP + ":9091";
+            data["local_wifi_url"] = "http://"+ wifiIP + ":9091";
+        } else {
+            data["remote_rtsp_url"] = "rtsp://120.25.49.109:15544/live/stream_5";
+        }
+        sendSuccessResponse(std::move(callback), "success", data, k200OK);
     }
 
     void liveStart(const HttpRequestPtr& req,
