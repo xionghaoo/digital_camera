@@ -38,6 +38,9 @@ enum LiveType {
 enum ZoomOperation {
     WIDE, TELE, STOP
 };
+enum CameraModel {
+    ZV_E10M2
+};
 
 class SonyCamera {
     private:
@@ -57,7 +60,7 @@ class SonyCamera {
         std::string version();
         Json::Value scan();
         bool connect(int index);
-        bool connect_with_usb();
+        bool connect_with_usb(CameraModel model, std::string& deviceId);
         bool af_shutter(std::function<void (std::string)>* cb);
         bool capture();
         std::string get_save_path();

@@ -125,7 +125,7 @@ bool SonyCamera::connect(int index) {
     return true;
 }
 
-bool SonyCamera::connect_with_usb() {
+bool SonyCamera::connect_with_usb(CameraModel model, std::string& deviceId) {
     if (!isInitialized) {
         initialize();
     }
@@ -135,7 +135,15 @@ bool SonyCamera::connect_with_usb() {
     int serialSiz = sizeof(CrChar) * (SDK::USB_SERIAL_LENGTH + 1);
     memset(serialNum, 0, serialSiz);
     strncpy((char*)serialNum, "D18D5074C0AE", serialSiz);
-    SDK::CrCameraDeviceModelList usbModel = SDK::CrCameraDeviceModelList::CrCameraDeviceModel_ZV_E10M2;
+    SDK::CrCameraDeviceModelList usbModel;
+    switch (model)
+    {
+    case CameraModel::ZV_E10M2:
+        usbModel = SDK::CrCameraDeviceModelList::CrCameraDeviceModel_ZV_E10M2;
+        break;
+    default:
+        break;
+    }
     SDK::ICrCameraObjectInfo* pCam = nullptr;
     typedef std::shared_ptr<cli::CameraDevice> CameraDevicePtr;
     typedef std::vector<CameraDevicePtr> CameraDeviceList;

@@ -28,8 +28,9 @@ public:
                            "device_type:string:相机类型：sony|obsbot");
         ADD_METHOD_WITH_AUTO_DOC(CameraController, connect, "/api/camera/connect/{index}", Post,
                            "相机连接", "通过序号连接相机设备，需要先扫描相机");
-        ADD_METHOD_WITH_AUTO_DOC(CameraController, usbConnect, "/api/camera/connect/usb", Post,
-                           "相机USB连接", "通过USB接口连接相机");
+        ADD_METHOD_WITH_BODY_PARAMS(CameraController, usbConnect, "/api/camera/connect/usb", Post,
+                           "相机USB连接", "通过USB接口连接相机",
+                           "device_id:string:相机设备ID：先写死 D18D5074C0AE,model:string:相机型号：ZV_E10M2");
         ADD_METHOD_WITH_BODY_PARAMS(CameraController, power, "/api/camera/power", Post,
                            "相机电源控制", "控制相机开关机，目前只有关机可用",
                            "power_on:bool:是否开机：true|false");
@@ -106,8 +107,35 @@ public:
     void usbConnect(const HttpRequestPtr& req,
                     std::function<void(const HttpResponsePtr&)>&& callback) 
     {
-        std::lock_guard<std::mutex> lock(cameraMutex_);       
-        bool success = camera.connect_with_usb();
+        // 使用基类的验证方法
+        const Json::Value* json = validateJsonRequest(req);
+        if (!json) {
+            sendErrorResponse(std::move(callback), 400, "请求体格式错误，需要JSON格式", k400BadRequest);
+            return;
+        }
+        
+        // 验证必填字段
+        std::vector<std::string> missingFields = validateRequiredFields(json, {"device_id", "model"});
+        if (!missingFields.empty()) {
+            std::string message = "缺少必填字段: " + missingFields[0];
+            for (size_t i = 1; i < missingFields.size(); ++i) {
+                message += ", " + missingFields[i];
+            }
+            sendErrorResponse(std::move(callback), 400, message, k400BadRequest);
+            return;
+        }
+        std::lock_guard<std::mutex> lock(cameraMutex_); 
+        std::string modelStr = (*json)["model"].asString(); 
+        std::string deviceId = (*json)["deviceId"].asString(); 
+        CameraModel model;
+        if (modelStr == "ZV_E10M2") {
+            model = CameraModel::ZV_E10M2;
+        } else {
+             sendErrorResponse(std::move(callback), -1, "不支持的相机型号", k200OK);
+            return;
+        }
+        // 型号先固定zv-e10ii， D18D5074C0AE
+        bool success = camera.connect_with_usb(model, deviceId);
         Json::Value data = success;
         if (success) {
             sendSuccessResponse(std::move(callback), "success", data, k200OK);
